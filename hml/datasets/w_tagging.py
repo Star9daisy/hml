@@ -9,46 +9,35 @@ from keras.src.backend import config
 from ..operations.awkward_ops import ak_from_h5, ak_to_h5
 
 
-@nb.njit()
-def add_records(builder, px, py, pz, e, pdg_id, is_from_w, is_in_leading_jet):
-    for i in range(len(px)):
-        builder.begin_record()
-        builder.field("px").append(px[i])
-        builder.field("py").append(py[i])
-        builder.field("pz").append(pz[i])
-        builder.field("e").append(e[i])
-        builder.field("pdg_id").append(pdg_id[i])
-        builder.field("is_from_w").append(is_from_w[i])
-        builder.field("is_in_leading_jet").append(is_in_leading_jet[i])
-        builder.end_record()
+@nb.njit
+def append_particles(builder, particles):
+    builder.begin_list()
+    for particle in particles:
+        builder.begin_list()
+        for property in particle:
+            builder.append(property)
+        builder.end_list()
+
+    builder.end_list()
 
 
 def extract_data(path):
     with open(path) as f:
         lines = f.readlines()
 
-    events_builder = ak.ArrayBuilder()
+    particles_builder = ak.ArrayBuilder()
     progress_bar = utils.Progbar(len(lines))
 
     for line in lines:
         values = line.split()
-        px = np.array(values[::7], dtype=float)
-        py = np.array(values[1::7], dtype=float)
-        pz = np.array(values[2::7], dtype=float)
-        e = np.array(values[3::7], dtype=float)
-        pdg_id = np.array(values[4::7], dtype=int)
-        is_from_w = np.array(values[5::7], dtype=int)
-        is_in_leading_jet = np.array(values[6::7], dtype=int)
-
-        events_builder.begin_list()
-        add_records(events_builder, px, py, pz, e, pdg_id, is_from_w, is_in_leading_jet)
-        events_builder.end_list()
+        values = np.array(values, dtype=float).reshape(-1, 7)
+        append_particles(particles_builder, values)
 
         progress_bar.add(1)
 
-    events = events_builder.snapshot()
+    particles = particles_builder.snapshot()
 
-    return events
+    return particles
 
 
 def load_dataset(path="w_tagging"):
@@ -64,9 +53,9 @@ def load_dataset(path="w_tagging"):
     Returns
     -------
     events : ak.Array
-        The events stored in an awkward record array.
+        The events stored in an awkward array.
     labels : ak.Array
-        The labels stored in an awkward record array.
+        The labels stored in an awkward array.
     """
     path = Path(config.keras_home()) / "datasets" / path
     path.mkdir(exist_ok=True, parents=True)
@@ -96,8 +85,9 @@ def load_dataset(path="w_tagging"):
         ak_to_h5(wboson_events, path / "wboson.h5")
 
     events = ak.concatenate([qstar_events, wboson_events])
-    labels = ak.zip(
-        {"is_w": np.array([0] * len(qstar_events) + [1] * len(wboson_events))}
-    )
+    labels = np.array([0] * len(qstar_events) + [1] * len(wboson_events))
 
-    return events, labels
+    x = ak.to_regular(events, axis=-1)
+    y = ak.from_numpy(labels)
+
+    return x, y
