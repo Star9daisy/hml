@@ -9,7 +9,7 @@ import numpy as np
 from tqdm import tqdm
 
 
-def ak_to_h5(
+def ak_to_hdf5(
     array: ak.Array,
     path: str | Path,
     chunk_size: int | None = None,
@@ -31,9 +31,9 @@ def ak_to_h5(
     Examples
     --------
     >>> import awkward as ak
-    >>> from hml.operations import ak_to_h5
+    >>> from hml.operations import ak_to_hdf5
     >>> array = ak.Array([[1, 2, 3], [], [4, 5], [], [], [6, 7, 8, 9]])
-    >>> ak_to_h5(array, "/tmp/array.h5")
+    >>> ak_to_hdf5(array, "/tmp/array.h5")
     """
     with h5py.File(path, "w") as file:
         group = file.create_group("awkward")
@@ -67,7 +67,7 @@ def ak_to_h5(
                 subgroup.attrs["length"] = length
 
 
-def ak_from_h5(
+def ak_from_hdf5(
     path: str | Path,
     chunks: list[int] | None = None,
     verbose: int = 0,
@@ -86,10 +86,10 @@ def ak_from_h5(
 
     Examples
     --------
-    >>> from hml.operations import ak_to_h5, ak_from_h5
+    >>> from hml.operations import ak_to_hdf5, ak_from_hdf5
     >>> array = ak.Array([[1, 2, 3], [], [4, 5], [], [], [6, 7, 8, 9]])
-    >>> ak_to_h5(array, "/tmp/array.h5")
-    >>> array = ak_from_h5("/tmp/array.h5")
+    >>> ak_to_hdf5(array, "/tmp/array.h5")
+    >>> array = ak_from_hdf5("/tmp/array.h5")
     """
     with h5py.File(path, "r") as file:
         group = file["awkward"]

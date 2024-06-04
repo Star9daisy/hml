@@ -6,7 +6,7 @@ import numpy as np
 from keras import utils
 from keras.src.backend import config
 
-from ..operations.awkward_ops import ak_from_h5, ak_to_h5
+from ..operations.awkward_ops import ak_from_hdf5, ak_to_hdf5
 
 
 @nb.njit
@@ -73,16 +73,16 @@ def load_dataset(path="w_tagging"):
     )
 
     if (path / "qstar.h5").exists():
-        qstar_events = ak_from_h5(path / "qstar.h5")
+        qstar_events = ak_from_hdf5(path / "qstar.h5")
     else:
         qstar_events = extract_data(qstar_path)
-        ak_to_h5(qstar_events, path / "qstar.h5")
+        ak_to_hdf5(qstar_events, path / "qstar.h5")
 
     if (path / "wboson.h5").exists():
-        wboson_events = ak_from_h5(path / "wboson.h5")
+        wboson_events = ak_from_hdf5(path / "wboson.h5")
     else:
         wboson_events = extract_data(wboson_path)
-        ak_to_h5(wboson_events, path / "wboson.h5")
+        ak_to_hdf5(wboson_events, path / "wboson.h5")
 
     events = ak.concatenate([qstar_events, wboson_events])
     labels = np.array([0] * len(qstar_events) + [1] * len(wboson_events))
