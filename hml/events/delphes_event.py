@@ -3,6 +3,7 @@ from typing import Self
 import awkward as ak
 import inflection
 import uproot
+from typeguard import typechecked
 
 from ..types import PathLike
 from .event import EventBase
@@ -48,6 +49,7 @@ class DelphesEvent(EventBase):
     True
     """
 
+    @typechecked
     def __init__(self, tree: uproot.TTree):
         self.tree = tree
 
@@ -55,6 +57,7 @@ class DelphesEvent(EventBase):
         """The number of events"""
         return self.tree.num_entries
 
+    @typechecked
     def __getitem__(self, key: str):
         return self.tree[self.keys_dict[key]].array()
 
@@ -64,6 +67,7 @@ class DelphesEvent(EventBase):
         return self._tree
 
     @tree.setter
+    @typechecked
     def tree(self, tree: uproot.TTree):
         self._tree = tree
 
@@ -91,12 +95,14 @@ class DelphesEvent(EventBase):
         """The key mappings between Delphes event and events read by uproot."""
         return self._keys_dict
 
+    @typechecked
     def get(self, key: str) -> ak.Array | None:
         """Get the value according to the key."""
         if (original_key := self.keys_dict.get(key)) is not None:
             return self.tree.get(original_key).array()
 
     @classmethod
+    @typechecked
     def load(cls, path: PathLike) -> Self:
         """Load an event file from the given path."""
         tree = uproot.open(path + ":Delphes")
