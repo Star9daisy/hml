@@ -5,10 +5,10 @@ import inflection
 import uproot
 
 from ..types import PathLike
-from .event import Event
+from .event import EventBase
 
 
-class DelphesEvent(Event):
+class DelphesEvent(EventBase):
     """Dict-like Delphes events with more key cases supported.
 
     Treat the event tree read by uproot as a dict-like object. The keys are
