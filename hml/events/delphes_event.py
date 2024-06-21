@@ -29,7 +29,7 @@ class DelphesEvent(Event):
     Examples
     --------
     >>> import uproot
-    >>> from hml5.events import DelphesEvent
+    >>> from hml.events import DelphesEvent
     >>> tree = uproot.open("tag_1_delphes_events.root")["Delphes"]
     >>> events = DelphesEvent(tree)
     >>> len(events)
