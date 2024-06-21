@@ -73,6 +73,8 @@ nav:
       - 1801.00797: code_examples/1801.00797.md
   - API reference:
       - hml.generators: api_reference/hml.generators.md
+      - hml.events:
+          - delphes_event: api_reference/hml.events/delphes_event.md
       - hml.physics_objects:
           - single: api_reference/physics_objects/single.md
           - collective: api_reference/physics_objects/collective.md
