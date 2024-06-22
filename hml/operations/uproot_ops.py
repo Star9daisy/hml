@@ -2,186 +2,252 @@ from __future__ import annotations
 
 import awkward as ak
 import numba as nb
+import uproot
 import vector
 
 vector.register_awkward()
 
 
-@nb.njit(cache=True)
-def find_eflow_in_refs(eflow, refs):  # pragma: no cover
-    """Find the constituent reference indices in an eflow branch.
+def branch_to_momentum4d(branch: uproot.TBranch):
+    """Convert a branch read by uproot to a Momentum4D record array.
 
-    This operation is used to retrieve the jet constituents. Jet constituents are
-    a reference to the "EFlowTrack", "EFlowPhoton", and "EFlowNeutralHadron" branches
-    in the Delphes output.
+    Top-level branches supported by default are (except ScalarHT):
+        - Particle -> GenParticle
+        - Track -> Track
+        - Tower -> Tower
+        - EFlowTrack -> Track
+        - EFlowPhoton -> Tower
+        - EFlowNeutralHadron -> Tower
+        - GenJet -> Jet
+        - GenMissingET -> MissingET
+        - Jet -> Jet
+        - Electron -> Electron
+        - Photon -> Photon
+        - Muon -> Muon
+        - FatJet -> Jet
+        - MissingET -> MissingET
 
-    The reference is a 2d record array with the shape (n, var, var), which means
-    n events with variable-length jets and variable-length constituents per jet.
-    The corresponding branch, however, is a 1d record array. To related the two,
-    we need to find the "fUniqueID" of the jet constituents in the reference array.
-
-    Parameters
-    ----------
-    eflow: awkward array, shape (n, var)
-        EFlowTrack, EFlowPhoton, or EFlowNeutralHadron array.
-    refs: awkward array, shape (n, var, var)
-        Reference array of all jet constituents.
-
-    Return
-    ------
-    indices: list
-        List of indices of constituents in the eflow array.
-    """
-    indices = []
-
-    for record_a, record_b in zip(eflow, refs):
-        indices_per_a = []
-
-        for i in range(len(record_b)):
-            indices_per_b = []
-
-            for j in range(len(record_b[i])):
-                for k in range(len(record_a)):
-                    if record_b[i][j] == record_a[k]:
-                        indices_per_b.append(k)
-            indices_per_a.append(indices_per_b)
-
-        indices.append(indices_per_a)
-
-    return indices
-
-
-@nb.njit(cache=True)
-def take_momentum4d(array, indices):  # pragma: no cover
-    """Take the 4-momentum of the constituents in the eflow array.
+    Other custom branches could be converted correctly if they are output by
+    Delphes and of the class as above.
 
     Parameters
     ----------
-    array: awkward array, shape (n, var)
-        EFlowTrack, EFlowPhoton, or EFlowNeutralHadron array.
-    indices: list
-        List of indices of constituents in the eflow array.
+    branch : uproot.TBranch
+        The branch to convert.
 
-    Return
-    ------
-    momentum4d: tuple
-        Tuple of 4-momentum components (pt, eta, phi, mass).
+    Returns
+    -------
+    ak.Array
+        The converted branch as a Momentum4D record array.
+
+    Examples
+    --------
+    >>> import uproot
+    >>> events = uproot.open("tag_1_delphes_events.root")["Delphes"]
+    >>> branch = events["Jet"]
+    >>> momentum4d = branch_to_momentum4d(branch)
+    >>> momentum4d.typestr
+    '100 * var * Momentum4D[pt: float32, eta: float32, phi: float32, mass: float32]'
+
+    >>> branch = events["Jet.Constituents"]
+    >>> momentum4d = branch_to_momentum4d(branch)
+    >>> momentum4d.typestr
+    '100 * var * var * Momentum4D[pt: float32, eta: float32, phi: float32, mass: float32]'
+
     """
-    pt = []
-    eta = []
-    phi = []
-    mass = []
-
-    for record, indices_at_1 in zip(array, indices):
-        pt.append(
-            [[record[i].pt for i in indices_at_2] for indices_at_2 in indices_at_1]
-        )
-        phi.append(
-            [[record[i].phi for i in indices_at_2] for indices_at_2 in indices_at_1]
-        )
-        eta.append(
-            [[record[i].eta for i in indices_at_2] for indices_at_2 in indices_at_1]
-        )
-        mass.append(
-            [[record[i].mass for i in indices_at_2] for indices_at_2 in indices_at_1]
-        )
-
-    return pt, eta, phi, mass
-
-
-def branch_to_momentum4d(events, branch, with_id=False):
-    """Convert a Delphes branch to a 4-momentum array.
-
-    Some branches in the Delphes output do not have full 4-momentum information,
-    e.g., "Jet" has PT, Eta, Phi, Mass but no Px, Py, Pz, E. This function converts
-    the branch to the registered "Momentum4D" array supported by the vector library.
-
-    Parameters
-    ----------
-    events:
-        Events opened by uproot.
-    branch: str
-        Branch name to be converted, e.g., "Jet"
-    with_id: bool
-        Whether to include the "fUniqueID" in the 4-momentum array, which is used
-        to find the constituents in the eflow branches.
-
-    Return
-    ------
-    momenta: Momentum4D
-        4-momentum array with the shape (n, var).
-    """
-    eta = events[f"{branch}.Eta"].array()
-    phi = events[f"{branch}.Phi"].array()
-
-    if f"{branch}.PT" in events:
-        pt = events[f"{branch}.PT"].array()
-    elif f"{branch}.ET" in events:
-        pt = events[f"{branch}.ET"].array()
-    elif f"{branch}.MET" in events:
-        pt = events[f"{branch}.MET"].array()
+    if branch.top_level:
+        return top_level_branch_to_momentum4d(branch)
     else:
-        raise ValueError(f"Cannot find the PT branch for {branch}")
+        return sub_level_branch_to_momentum4d(branch)
 
-    if f"{branch}.Mass" in events:
-        mass = events[f"{branch}.Mass"].array()
+
+def top_level_branch_to_momentum4d(branch: uproot.TBranch) -> ak.Array:
+    """Convert a top-level branch to a Momentum4D record array.
+
+    Parameters
+    ----------
+    branch : uproot.TBranch
+        The branch to convert.
+
+    Returns
+    -------
+    ak.Array
+        The converted branch as a Momentum4D record array.
+
+    Raises
+    ------
+    ValueError
+        If the branch does not have the required leaves (PT/ET/MET, Eta, Phi,
+        Mass).
+
+    Examples
+    --------
+    >>> events = uproot.open("tag_1_delphes_events.root")["Delphes"]
+    >>> branch = events["Jet"]
+    >>> momentum4d = branch_to_momentum4d(branch)
+    >>> momentum4d.typestr
+    '100 * var * Momentum4D[pt: float32, eta: float32, phi: float32, mass: float32]'
+    """
+    if not branch.top_level:
+        raise ValueError(f"{branch.name} is not a top-level branch.")
+
+    # Pt
+    if f"{branch.name}.PT" in branch.keys():
+        pt = branch[f"{branch.name}.PT"].array()
+    elif f"{branch.name}.ET" in branch.keys():
+        pt = branch[f"{branch.name}.ET"].array()
+    elif f"{branch.name}.MET" in branch.keys():
+        pt = branch[f"{branch.name}.MET"].array()
     else:
-        mass = ak.zeros_like(eta)
+        raise ValueError(
+            f"branch {branch.name} does not have any of "
+            f"{branch.name}.PT, {branch.name}.ET, {branch.name}.MET."
+        )
 
-    momenta = ak.zip(
-        {
-            "pt": pt,
-            "eta": eta,
-            "phi": phi,
-            "mass": mass,
-        },
-        with_name="Momentum4D",
+    # Eta
+    # if f"{branch.name}.Eta" in branch.keys():
+    eta = branch[f"{branch.name}.Eta"].array()
+    # else:
+    # raise ValueError(f"branch {branch.name} does not have {branch.name}.Eta.")
+
+    # Phi
+    # if f"{branch.name}.Phi" in branch.keys():
+    phi = branch[f"{branch.name}.Phi"].array()
+    # else:
+    # raise ValueError(f"branch {branch.name} does not have {branch.name}.Phi.")
+
+    # Mass
+    if f"{branch.name}.Mass" in branch.keys():
+        mass = branch[f"{branch.name}.Mass"].array()
+    else:
+        mass = ak.zeros_like(pt)
+
+    # Momentum4D
+    momentum4d = ak.zip(
+        {"pt": pt, "eta": eta, "phi": phi, "mass": mass}, with_name="Momentum4D"
     )
-    momenta = ak.values_astype(momenta, "float32")
 
-    if with_id:
-        momenta["id"] = events[f"{branch}.fUniqueID"].array()
-
-    return momenta
+    return momentum4d
 
 
-def constituents_to_momentum4d(events, branch):
-    """Convert the constituents in a Delphes branch to a 4-momentum array.
+def sub_level_branch_to_momentum4d(branch: uproot.TBranch) -> ak.Array:
+    """Convert a sub-level branch representing a physics object from events to a
+    Momentum4D record array.
 
     Parameters
     ----------
-    events:
-        Events opened by uproot.
-    branch: str
-        Branch name to be converted, e.g., "Jet.Constituents"
+    branch : uproot.TBranch
+        The branch to convert.
 
-    Return
-    ------
-    constituents: Momentum4D
-        4-momentum array with the shape (n, var, var).
+    Returns
+    -------
+    ak.Array
+        The converted branch as a Momentum4D record array.
+
+    Examples
+    --------
+    >>> events = uproot.open("tag_1_delphes_events.root")["Delphes"]
+    >>> branch = events["Jet.Constituents"]
+    >>> momentum4d = sub_level_branch_to_momentum4d(branch)
+    >>> momentum4d.typestr
+    '100 * var * var * Momentum4D[pt: float32, eta: float32, phi: float32, mass: float32]'
     """
-    refs = events[branch].array()["refs"]
-    tracks = branch_to_momentum4d(events, "EFlowTrack", with_id=True)
-    photons = branch_to_momentum4d(events, "EFlowPhoton", with_id=True)
-    neutrals = branch_to_momentum4d(events, "EFlowNeutralHadron", with_id=True)
+    if branch.top_level:
+        raise ValueError(f"{branch.name} is a top-level branch.")
 
-    matches = []
-    for i in [tracks, photons, neutrals]:
-        indices = ak.from_iter(find_eflow_in_refs(i.id, refs))
-        pt, eta, phi, mass = take_momentum4d(i, indices)
-        matches.append(
-            ak.zip(
-                {
-                    "pt": pt,
-                    "eta": eta,
-                    "phi": phi,
-                    "mass": mass,
-                },
-                with_name="Momentum4D",
-            )
-        )
+    if ".Constituents" in branch.name:
+        return constituents_to_momentum4d(branch)
 
-    constituents = ak.concatenate(matches, -1)
-    constituents = ak.values_astype(constituents, "float32")
+    else:
+        raise ValueError(f"{branch.name} is not supported yet.")
 
-    return constituents
+
+def constituents_to_momentum4d(constituents: uproot.TBranch) -> ak.Array:
+    """Convert the constituents branch to a Momentum4D record array.
+
+    Parameters
+    ----------
+    constituents : uproot.TBranch
+        The constituents branch.
+
+    Returns
+    -------
+    ak.Array
+        The constituents as a Momentum4D record array.
+
+    Examples
+    --------
+    >>> events = uproot.open("tag_1_delphes_events.root")["Delphes"]
+    >>> momentum4d = constituents_to_momentum4d(events["Jet.Constituents"])
+    >>> momentum4d.typestr
+    '100 * var * var * Momentum4D[pt: float32, eta: float32, phi: float32, mass: float32]'
+    """
+    reference_ids = constituents.array()["refs"]
+    events = constituents.parent.parent
+
+    tracks = top_level_branch_to_momentum4d(events["EFlowTrack"])
+    track_ids = events["EFlowTrack.fUniqueID"].array()
+
+    photons = top_level_branch_to_momentum4d(events["EFlowPhoton"])
+    photon_ids = events["EFlowPhoton.fUniqueID"].array()
+
+    hadrons = top_level_branch_to_momentum4d(events["EFlowNeutralHadron"])
+    hadron_ids = events["EFlowNeutralHadron.fUniqueID"].array()
+
+    eflows = ak.concatenate([tracks, photons, hadrons], axis=1)
+    eflow_ids = ak.concatenate([track_ids, photon_ids, hadron_ids], axis=1)
+
+    builder = retrieve_constituents_from_eflows(
+        reference_ids, eflow_ids, eflows, ak.ArrayBuilder()
+    )
+
+    momentum4d = builder.snapshot()
+    momentum4d = ak.values_astype(momentum4d, "float32")
+    return momentum4d
+
+
+@nb.njit
+def retrieve_constituents_from_eflows(
+    reference_ids: ak.Array,
+    eflow_ids: ak.Array,
+    eflows: ak.Array,
+    builder: ak.ArrayBuilder,
+) -> ak.ArrayBuilder:
+    """Retrieve the constituents from the eflow branches based on the reference.
+
+    Parameters
+    ----------
+    reference_ids : ak.Array
+        The reference fUniqueIDs of the constituents.
+    eflow_ids : ak.Array
+        The eflow fUniqueIDs.
+    eflows : ak.Array
+        The eflow branch (from EFlowTrack, EFlowPhoton, EFlowNeutralHadron).
+    builder : ak.ArrayBuilder
+        The array builder to store the constituent data.
+
+    Returns
+    -------
+    ak.ArrayBuilder
+        The array builder with the constituents data.
+    """
+    for ref_ids_per_event, eflows_per_event, eflow_ids_per_event in zip(
+        reference_ids, eflows, eflow_ids
+    ):
+        builder.begin_list()
+        for ref_ids_per_jet in ref_ids_per_event:
+            builder.begin_list()
+            for ref_id in ref_ids_per_jet:
+                for eflow, eflow_id in zip(eflows_per_event, eflow_ids_per_event):
+                    if eflow_id == ref_id:
+                        builder.begin_record("Momentum4D")
+                        builder.field("pt").append(eflow.pt)
+                        builder.field("eta").append(eflow.eta)
+                        builder.field("phi").append(eflow.phi)
+                        builder.field("mass").append(eflow.mass)
+                        builder.end_record()
+                        break
+            builder.end_list()
+        builder.end_list()
+
+    return builder
