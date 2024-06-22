@@ -2,19 +2,32 @@ from __future__ import annotations
 
 import fastjet as fj
 
+JET_ALGORITHMS = {
+    "kt": fj.kt_algorithm,
+    "ca": fj.cambridge_algorithm,
+    "ak": fj.antikt_algorithm,
+    "undefined": fj.undefined_jet_algorithm,
+}
 
-def get_jet_algorithm(name: str):
-    JET_ALGORITHMS = {
-        "kt": fj.kt_algorithm,
-        "cambridge": fj.cambridge_algorithm,
-        "antikt": fj.antikt_algorithm,
-        "genkt": fj.genkt_algorithm,
-        "cambridge_for_passive": fj.cambridge_for_passive_algorithm,
-        "genkt_for_passive": fj.genkt_for_passive_algorithm,
-        "ee_kt": fj.ee_kt_algorithm,
-        "ee_genkt": fj.ee_genkt_algorithm,
-        "plugin": fj.plugin_algorithm,
-        "undefined": fj.undefined_jet_algorithm,
-    }
 
+def get_jet_algorithm(name: str) -> int:
+    """Get a jet algorithm by its name.
+
+    Parameters
+    ----------
+    name : str
+        Jet algorithm name.
+
+    Returns
+    -------
+    fastjet.JetAlgorithm
+        Jet algorithm.
+
+    Examples
+    --------
+    >>> get_jet_algorithm("kt")
+    0
+    >>> fj.kt_algorithm
+    0
+    """
     return JET_ALGORITHMS.get(name, fj.undefined_jet_algorithm)
