@@ -12,6 +12,7 @@ def branch_to_momentum4d(branch: uproot.TBranch):
     """Convert a branch read by uproot to a Momentum4D record array.
 
     Top-level branches supported by default are (except ScalarHT):
+
         - Particle -> GenParticle
         - Track -> Track
         - Tower -> Tower
