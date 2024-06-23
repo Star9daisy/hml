@@ -1,11 +1,14 @@
 from __future__ import annotations
 
+import numpy as np
 from keras import ops
 
 
 def ops_histogram_fixed_width(values, value_range, nbins, dtype="int32"):
     value_min, value_max = value_range
     bin_edges = ops.linspace(value_min, value_max, nbins + 1)
+    inf = ops.convert_to_tensor([np.inf], dtype=values.dtype)
+    bin_edges = ops.concatenate([-inf, bin_edges[1:-1], inf])
     lower = bin_edges[:-1]  # type: ignore
     upper = bin_edges[1:]  # type: ignore
 
@@ -18,7 +21,7 @@ def ops_histogram_fixed_width(values, value_range, nbins, dtype="int32"):
             [
                 ops.count_nonzero(
                     ops.where(
-                        ops.logical_and(lower[i] <= values, values <= upper[i]),
+                        ops.logical_and(lower[i] <= values, values < upper[i]),
                         1.0,
                         0.0,
                     )
