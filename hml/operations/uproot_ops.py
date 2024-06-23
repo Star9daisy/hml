@@ -44,14 +44,16 @@ def branch_to_momentum4d(branch: uproot.TBranch):
     Examples
     --------
     >>> import uproot
+    >>> from hml.operations import uproot_ops as upo
+
     >>> events = uproot.open("tag_1_delphes_events.root")["Delphes"]
     >>> branch = events["Jet"]
-    >>> momentum4d = branch_to_momentum4d(branch)
+    >>> momentum4d = upo.branch_to_momentum4d(branch)
     >>> momentum4d.typestr
     '100 * var * Momentum4D[pt: float32, eta: float32, phi: float32, mass: float32]'
 
     >>> branch = events["Jet.Constituents"]
-    >>> momentum4d = branch_to_momentum4d(branch)
+    >>> momentum4d = upo.branch_to_momentum4d(branch)
     >>> momentum4d.typestr
     '100 * var * var * Momentum4D[pt: float32, eta: float32, phi: float32, mass: float32]'
 
@@ -83,9 +85,12 @@ def top_level_branch_to_momentum4d(branch: uproot.TBranch) -> ak.Array:
 
     Examples
     --------
+    >>> import uproot
+    >>> from hml.operations import uproot_ops as upo
+
     >>> events = uproot.open("tag_1_delphes_events.root")["Delphes"]
     >>> branch = events["Jet"]
-    >>> momentum4d = branch_to_momentum4d(branch)
+    >>> momentum4d = upo.branch_to_momentum4d(branch)
     >>> momentum4d.typestr
     '100 * var * Momentum4D[pt: float32, eta: float32, phi: float32, mass: float32]'
     """
@@ -147,9 +152,12 @@ def sub_level_branch_to_momentum4d(branch: uproot.TBranch) -> ak.Array:
 
     Examples
     --------
+    >>> import uproot
+    >>> from hml.operations import uproot_ops as upo
+
     >>> events = uproot.open("tag_1_delphes_events.root")["Delphes"]
     >>> branch = events["Jet.Constituents"]
-    >>> momentum4d = sub_level_branch_to_momentum4d(branch)
+    >>> momentum4d = upo.sub_level_branch_to_momentum4d(branch)
     >>> momentum4d.typestr
     '100 * var * var * Momentum4D[pt: float32, eta: float32, phi: float32, mass: float32]'
     """
@@ -178,8 +186,11 @@ def constituents_to_momentum4d(constituents: uproot.TBranch) -> ak.Array:
 
     Examples
     --------
+    >>> import uproot
+    >>> from hml.operations import uproot_ops as upo
+
     >>> events = uproot.open("tag_1_delphes_events.root")["Delphes"]
-    >>> momentum4d = constituents_to_momentum4d(events["Jet.Constituents"])
+    >>> momentum4d = upo.constituents_to_momentum4d(events["Jet.Constituents"])
     >>> momentum4d.typestr
     '100 * var * var * Momentum4D[pt: float32, eta: float32, phi: float32, mass: float32]'
     """

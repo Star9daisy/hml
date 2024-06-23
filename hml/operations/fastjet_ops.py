@@ -10,7 +10,7 @@ JET_ALGORITHMS = {
 }
 
 
-def get_jet_algorithm(name: str) -> int:
+def get_algorithm(name: str) -> int:
     """Get a jet algorithm by its name.
 
     Parameters
@@ -25,7 +25,10 @@ def get_jet_algorithm(name: str) -> int:
 
     Examples
     --------
-    >>> get_jet_algorithm("kt")
+    >>> import fastjet as fj
+    >>> from hml.operations import fastjet_ops as fjo
+
+    >>> fjo.get_algorithm("kt")
     0
     >>> fj.kt_algorithm
     0

@@ -41,6 +41,7 @@ def take(
     --------
     >>> import numpy as np
     >>> from hml.operations import awkward_ops as ako
+
     >>> array = np.arange(15).reshape(3, 5)
     >>> array
     array([[ 0,  1,  2,  3,  4],
@@ -186,7 +187,7 @@ def squeeze(array: ak.Array, axis: int | None = None) -> ak.Array:
     return array
 
 
-def ak_to_hdf5(
+def to_hdf5(
     array: ak.Array,
     path: str | Path,
     piece_size: int | None = None,
@@ -208,9 +209,10 @@ def ak_to_hdf5(
     Examples
     --------
     >>> import awkward as ak
-    >>> from hml.operations import ak_to_hdf5
+    >>> from hml.operations import awkward_ops as ako
+
     >>> array = ak.Array([[1, 2, 3], [], [4, 5], [], [], [6, 7, 8, 9]])
-    >>> ak_to_hdf5(array, "/tmp/array.h5")
+    >>> ako.to_hdf5(array, "/tmp/array.h5")
 
     >>> from pathlib import Path
     >>> Path("tests/data/pp2zz/Events/run_01/tag_1_delphes_events.root").exists()
@@ -248,7 +250,7 @@ def ak_to_hdf5(
                 subgroup.attrs["length"] = length
 
 
-def ak_from_hdf5(
+def from_hdf5(
     path: str | Path,
     pieces: list[int] | None = None,
     verbose: int = 0,
@@ -267,10 +269,11 @@ def ak_from_hdf5(
 
     Examples
     --------
-    >>> from hml.operations import ak_to_hdf5, ak_from_hdf5
+    >>> import hml.operations.awkward_ops as ako
+
     >>> array = ak.Array([[1, 2, 3], [], [4, 5], [], [], [6, 7, 8, 9]])
-    >>> ak_to_hdf5(array, "/tmp/array.h5")
-    >>> array = ak_from_hdf5("/tmp/array.h5")
+    >>> ako.to_hdf5(array, "/tmp/array.h5")
+    >>> array = ako.from_hdf5("/tmp/array.h5")
     """
     with h5py.File(path, "r") as file:
         group = file["awkward"]

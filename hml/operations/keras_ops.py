@@ -8,7 +8,7 @@ from ..types import Number, Tensor
 
 
 @typechecked
-def ops_histogram_fixed_width(
+def histogram_fixed_width(
     values: Tensor,
     value_range: tuple[Number, Number],
     nbins: int,
@@ -40,7 +40,7 @@ def ops_histogram_fixed_width(
 
 
 @typechecked
-def ops_unique(tensor: Tensor) -> Tensor:
+def unique(tensor: Tensor) -> Tensor:
     """Find the unique elements in a tensor."""
     # Handle the empty tensor case
     if ops.size(tensor) == 0:
