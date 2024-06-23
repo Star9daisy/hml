@@ -14,7 +14,36 @@ def histogram_fixed_width(
     nbins: int,
     dtype: str = "int32",
 ) -> Tensor:
-    """Compute the histogram of a set of values using fixed-width bins."""
+    """Compute the histogram of a set of values using fixed-width bins.
+
+    Parameters
+    ----------
+    values : Tensor
+        Input tensor of values.
+    value_range : tuple[Number, Number]
+        Tuple containing the minimum and maximum values of the histogram.
+    nbins : int
+        Number of bins.
+    dtype : str, optional
+        Data type of the histogram tensor, by default "int32".
+
+    Returns
+    -------
+    Tensor
+        Histogram tensor.
+
+    Examples
+    --------
+    >>> from keras import ops
+    >>> import hml.operations.keras_ops as kro
+
+    >>> values = ops.array([-1.0, 0.0, 1.5, 2.0, 5.0, 15])
+    >>> value_range = (0.0, 5.0)
+    >>> nbins = 5
+    >>> hist = kro.histogram_fixed_width(values, value_range, nbins)
+    >>> ops.convert_to_numpy(hist)
+    array([2, 1, 1, 0, 2], dtype=int32)
+    """
     value_min, value_max = value_range
 
     # Generate bin edges including the infinities at the boundaries
@@ -41,7 +70,31 @@ def histogram_fixed_width(
 
 @typechecked
 def unique(tensor: Tensor) -> Tensor:
-    """Find the unique elements in a tensor."""
+    """Find the unique elements in a tensor.
+
+    Parameters
+    ----------
+    tensor : Tensor
+        Input tensor.
+
+    Returns
+    -------
+    Tensor
+        Unique elements in the input tensor.
+
+    Examples
+    --------
+    >>> from keras import ops
+    >>> import hml.operations.keras_ops as kro
+
+    >>> tensor = ops.array([1, 2, 2, 3, 4, 4, 4, 5])
+    >>> ops.convert_to_numpy(kro.unique(tensor))
+    array([1, 2, 3, 4, 5], dtype=int32)
+
+    >>> tensor = ops.array([])
+    >>> ops.convert_to_numpy(kro.unique(tensor))
+    array([], dtype=float32)
+    """
     # Handle the empty tensor case
     if ops.size(tensor) == 0:
         return ops.array([])
