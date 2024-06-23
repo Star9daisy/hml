@@ -2,9 +2,18 @@ from __future__ import annotations
 
 import numpy as np
 from keras import ops
+from typeguard import typechecked
+
+from ..types import Number, Tensor
 
 
-def ops_histogram_fixed_width(values, value_range, nbins, dtype="int32"):
+@typechecked
+def ops_histogram_fixed_width(
+    values: Tensor,
+    value_range: tuple[Number, Number],
+    nbins: int,
+    dtype="int32",
+) -> Tensor:
     value_min, value_max = value_range
     bin_edges = ops.linspace(value_min, value_max, nbins + 1)
     inf = ops.convert_to_tensor([np.inf], dtype=values.dtype)
@@ -32,7 +41,8 @@ def ops_histogram_fixed_width(values, value_range, nbins, dtype="int32"):
     )
 
 
-def ops_unique(tensor):
+@typechecked
+def ops_unique(tensor: Tensor) -> Tensor:
     sorted_tensor, sorted_indices = ops.sort(tensor), ops.argsort(tensor)
     selection = ops.not_equal(sorted_tensor[1:], sorted_tensor[:-1])  # type: ignore
     selection = ops.add(ops.squeeze(ops.where(selection), 0), 1)
