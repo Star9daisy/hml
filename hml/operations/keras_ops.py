@@ -12,46 +12,50 @@ def ops_histogram_fixed_width(
     values: Tensor,
     value_range: tuple[Number, Number],
     nbins: int,
-    dtype="int32",
+    dtype: str = "int32",
 ) -> Tensor:
+    """Compute the histogram of a set of values using fixed-width bins."""
     value_min, value_max = value_range
+
+    # Generate bin edges including the infinities at the boundaries
     bin_edges = ops.linspace(value_min, value_max, nbins + 1)
     inf = ops.convert_to_tensor([np.inf], dtype=values.dtype)
     bin_edges = ops.concatenate([-inf, bin_edges[1:-1], inf])
-    lower = bin_edges[:-1]  # type: ignore
-    upper = bin_edges[1:]  # type: ignore
 
-    return ops.fori_loop(
-        0,
-        nbins,
-        lambda i, s: ops.scatter_update(
-            s,
-            [[i]],
-            [
-                ops.count_nonzero(
-                    ops.where(
-                        ops.logical_and(lower[i] <= values, values < upper[i]),
-                        1.0,
-                        0.0,
-                    )
-                )
-            ],
-        ),
-        ops.zeros((nbins,), dtype=dtype),
-    )
+    lower = bin_edges[:-1]
+    upper = bin_edges[1:]
+
+    # Initialize histogram tensor
+    histogram = ops.zeros((nbins,), dtype=dtype)
+
+    def update_histogram(i, histogram):
+        # Count the number of values in the current bin
+        is_selected = ops.logical_and(lower[i] <= values, values < upper[i])
+        bin_count = ops.count_nonzero(ops.where(is_selected, 1.0, 0.0))
+        # Update the histogram at the i-th bin
+        return ops.scatter_update(histogram, [[i]], [bin_count])
+
+    # Loop through bins and update histogram
+    return ops.fori_loop(0, nbins, update_histogram, histogram)
 
 
 @typechecked
 def ops_unique(tensor: Tensor) -> Tensor:
-    sorted_tensor, sorted_indices = ops.sort(tensor), ops.argsort(tensor)
-    selection = ops.not_equal(sorted_tensor[1:], sorted_tensor[:-1])  # type: ignore
-    selection = ops.add(ops.squeeze(ops.where(selection), 0), 1)
-    unique_indices = ops.append([0], selection)
+    """Find the unique elements in a tensor."""
+    # Handle the empty tensor case
+    if ops.size(tensor) == 0:
+        return ops.array([])
 
-    try:
-        unique_elements = ops.take(sorted_tensor, unique_indices)
-        unique_indices = ops.take(sorted_indices, unique_indices)
-        return unique_elements
+    sorted_tensor = ops.sort(tensor)
 
-    except Exception:
-        return ops.array([0])
+    # Detect the unique elements by checking for inequality between consecutive
+    # elements
+    selection = ops.not_equal(sorted_tensor[1:], sorted_tensor[:-1])
+    selection_indices = ops.add(ops.squeeze(ops.where(selection), 0), 1)
+
+    # Include the first element (index 0) in the unique indices
+    unique_indices = ops.append([0], selection_indices)
+
+    # Gather the unique elements using the unique indices
+    unique_elements = ops.take(sorted_tensor, unique_indices)
+    return unique_elements
