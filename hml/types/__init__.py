@@ -8,3 +8,4 @@ from .aliases import (
     Tensor,
 )
 from .event import Event
+from .physics_object import PhysicsObject
