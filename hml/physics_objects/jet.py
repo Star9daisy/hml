@@ -11,6 +11,7 @@ from ..events import DelphesEvent
 from ..naming import str_to_index
 from ..operations import fastjet_ops as fjo
 from ..operations import uproot_ops as upo
+from ..registration import register
 from ..types import IndexLike
 from .physics_object import PhysicsObjectBase
 
@@ -99,3 +100,7 @@ class Jet(PhysicsObjectBase):
         config["algorithm"] = self.algorithm
         config["radius"] = self.radius
         return config
+
+
+register(Jet, "Jet", existing_ok=True)
+register(Jet, "jet", existing_ok=True)
