@@ -167,22 +167,25 @@ def squeeze(array: ak.Array, axis: int | None = None) -> ak.Array:
     >>> ako.squeeze(array).typestr
     '1 * int64'
     """
-    if axis == 0:
-        pass
+    if axis is not None and axis >= array.ndim:
+        raise ValueError(
+            f"axis {axis} is out of bounds for array with {array.ndim} dimensions"
+        )
 
-    elif axis is None:
-        for i in range(array.ndim - 1):
-            if take(array, 0, i).typestr.startswith("1"):
-                array = take(array, 0, i + 1)
-
+    if axis is None:
+        axes = range(array.ndim)
     else:
-        if take(array, 0, axis - 1).typestr.startswith("1"):
-            array = take(array, 0, axis)
+        axes = [axis]
 
-    try:
-        array = ak.to_regular(array, None)
-    except ValueError:
-        pass
+    offset = 0
+    for axis in axes:
+        axis -= offset
+        try:
+            if ak.to_regular(array, axis).typestr.split(" * ")[axis] == "1":
+                array = take(array, 0, axis)
+                offset += 1
+        except Exception:
+            pass
 
     return array
 
