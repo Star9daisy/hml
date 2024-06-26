@@ -61,16 +61,34 @@ class PhysicsObjectBase(PhysicsObject):
         """The momentum 4D of the physics object."""
         slices = [slice(i, i + 1) if isinstance(i, int) else i for i in self.indices]
         values = ako.take(self._values, slices)
-        values = ako.pad(values, slices)
 
+        empty_p4 = ak.Array(
+            [{"pt": None, "eta": None, "phi": None, "mass": None}],
+            with_name="Momentum4D",
+        )
+
+        for i, index in enumerate(self.indices):
+            if isinstance(index, slice):
+                if index.stop is not None:
+                    if values.ndim - 1 - i > 0:
+                        # start from dim 1 so -1 again
+                        slices = [None] * (values.ndim - 1 - i - 1) + [...]
+                        empty_p4 = empty_p4[*slices]
+                    else:
+                        empty_p4 = empty_p4[0]
+
+                    start = index.start or 0
+                    required_length = index.stop - start
+                    values = ak.fill_none(
+                        ak.pad_none(values, required_length, axis=i, clip=True),
+                        empty_p4,
+                        axis=i,
+                    )
         for i, index in enumerate(self.indices):
             if isinstance(index, int):
                 values = ako.squeeze(values, axis=i)
 
-        try:
-            return ak.to_regular(values, axis=None)
-        except Exception:
-            return values
+        return values
 
     def read(self, events: uproot.TTree | DelphesEvent) -> Self:
         """Read events to fetch the p4."""
