@@ -60,6 +60,7 @@ def retrieve(name: str) -> object:
 
     serialized_obj = registered_item["serialized_obj"]
     obj = deserialize(serialized_obj)
+    registry.close()
 
     return obj
 
