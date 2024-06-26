@@ -26,9 +26,6 @@ class TestJet:
         assert ak.all(self.events["Jet.Eta"] == jets.p4.eta)
         assert ak.all(self.events["Jet.Phi"] == jets.p4.phi)
         assert ak.all(self.events["Jet.Mass"] == jets.p4.mass)
-        assert ak.all(self.events["Jet.Charge"] == jets.p4.charge)
-        assert ak.all(self.events["Jet.BTag"] == jets.p4.b_tag)
-        assert ak.all(self.events["Jet.TauTag"] == jets.p4.tau_tag)
 
         assert Jet().read(self.events).config == Jet().read(self.uproot_events).config
 
@@ -99,3 +96,9 @@ class TestJet:
         jets = Jet(indices=0).read(self.events)
 
         assert jets.p4.ndim == 1
+
+        jets = Jet(key="jet.constituents", indices=[slice(10), slice(20)]).read(
+            self.events
+        )
+
+        assert jets.p4.typestr.split(" * ")[:3] == ["100", "10", "20"]

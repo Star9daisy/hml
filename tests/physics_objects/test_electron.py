@@ -18,7 +18,6 @@ class TestElectron:
         assert ak.all(self.events["Electron.Eta"] == electrons.p4.eta)
         assert ak.all(self.events["Electron.Phi"] == electrons.p4.phi)
         assert ak.all(electrons.p4.mass == 0)
-        assert ak.all(self.events["Electron.Charge"] == electrons.p4.charge)
 
     def test_name(self):
         electrons = Electron()

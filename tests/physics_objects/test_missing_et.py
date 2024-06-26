@@ -18,3 +18,10 @@ class TestMissingET:
         assert ak.all(self.events["MissingET.Eta"] == met.p4.eta)
         assert ak.all(self.events["MissingET.Phi"] == met.p4.phi)
         assert ak.all(met.p4.mass == 0)
+
+    def test_from_name(self):
+        _ = MissingET.from_name("MissingET")
+        _ = MissingET.from_name("missinget")
+        _ = MissingET.from_name("missing_et")
+        _ = MissingET.from_name("MET")
+        _ = MissingET.from_name("met")

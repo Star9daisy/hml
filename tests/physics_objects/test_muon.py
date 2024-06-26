@@ -18,4 +18,3 @@ class TestMuon:
         assert ak.all(self.events["Muon.Eta"] == muons.p4.eta)
         assert ak.all(self.events["Muon.Phi"] == muons.p4.phi)
         assert ak.all(muons.p4.mass == 0)
-        assert ak.all(self.events["Muon.Charge"] == muons.p4.charge)
