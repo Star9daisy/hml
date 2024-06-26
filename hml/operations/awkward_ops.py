@@ -150,7 +150,8 @@ def squeeze(array: ak.Array, axis: int | None = None) -> ak.Array:
     >>> from hml.operations import awkward_ops as ako
 
     >>> array = ak.Array([[[1, 2, 3]], [[4, 5, 6]]])
-    >>> ak.to_regular(array, None).typestr
+    >>> array = ak.to_regular(array, None)
+    >>> array.typestr
     '2 * 1 * 3 * int64'
     >>> ako.squeeze(array).typestr
     '2 * 3 * int64'
@@ -164,7 +165,9 @@ def squeeze(array: ak.Array, axis: int | None = None) -> ak.Array:
     >>> array = ak.Array([[1]])
     >>> ak.to_regular(array, None).typestr
     '1 * 1 * int64'
-    >>> ako.squeeze(array).typestr
+    >>> ako.squeeze(array)
+    1
+    >>> ako.squeeze(array, 0).typestr
     '1 * int64'
     """
     if axis is not None and axis >= array.ndim:

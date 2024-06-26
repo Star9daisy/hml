@@ -48,7 +48,7 @@ def test_pad():
 
 
 def test_squeeze():
-    array = ak.Array([[[1, 2, 3]], [[4, 5, 6]]])
+    array = ak.from_numpy(np.array([[[1, 2, 3]], [[4, 5, 6]]]))
     assert ako.squeeze(array).typestr == "2 * 3 * int64"
     assert ako.squeeze(array, axis=1).typestr == "2 * 3 * int64"
 
@@ -56,8 +56,17 @@ def test_squeeze():
     assert ako.squeeze(array).typestr == "3 * var * int64"
 
     array = ak.Array([[1]])
-    assert ako.squeeze(array).typestr == "1 * int64"
-    assert ako.squeeze(array, axis=0).typestr == "1 * 1 * int64"
+    assert ako.squeeze(array) == 1
+    assert ako.squeeze(array, axis=0).typestr == "1 * int64"
+
+    array = ak.Array([[[1]]])
+    assert ako.squeeze(array) == 1
+    assert ako.squeeze(array, axis=0).typestr == "1 * var * int64"
+
+    # Bad
+    array = ak.Array([1])
+    with pytest.raises(ValueError):
+        ako.squeeze(array, 1)
 
 
 def test_to_and_from_hdf5():
