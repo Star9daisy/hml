@@ -1,18 +1,12 @@
 import re
 from typing import Self
 
-import uproot
-
-from ..events import DelphesEvent
 from ..naming import str_to_index
 from ..registration import register
 from .physics_object import PhysicsObjectBase
 
 
 class MissingET(PhysicsObjectBase):
-    def read(self, events: uproot.TTree | DelphesEvent) -> Self:
-        return super().read(events)
-
     @classmethod
     def from_name(cls, name: str) -> Self:
         key_pattern = rf"({cls.__name__}|{cls.__name__.lower()}|MET|met)"

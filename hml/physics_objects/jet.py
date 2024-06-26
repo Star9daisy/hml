@@ -35,11 +35,6 @@ class Jet(PhysicsObjectBase):
         if self.algorithm is None and self.radius is None:
             super().read(events)
 
-            if "constituents" not in self.key.lower():
-                self._values["charge"] = self.events[f"{self.key.lower()}.charge"]
-                self._values["b_tag"] = self.events[f"{self.key.lower()}.b_tag"]
-                self._values["tau_tag"] = self.events[f"{self.key.lower()}.tau_tag"]
-
         else:
             events = (
                 DelphesEvent(events) if isinstance(events, uproot.TTree) else events
