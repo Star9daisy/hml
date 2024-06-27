@@ -130,14 +130,14 @@ def pad(
     return array
 
 
-def squeeze(array: ak.Array, axis: int | None = None) -> ak.Array:
+def squeeze(array: ak.Array, axis: int | list[int] | None = None) -> ak.Array:
     """Remove single-dimensional entries from an array.
 
     Parameters
     ----------
     array : ak.Array
         The array to squeeze.
-    axis : int or None, optional
+    axis : int, list of int, optional
         The axis to be squeezed. If None, squeeze all axes.
 
     Returns
@@ -171,18 +171,22 @@ def squeeze(array: ak.Array, axis: int | None = None) -> ak.Array:
     >>> ako.squeeze(array, 0).typestr
     '1 * int64'
     """
-    if axis is not None and axis >= array.ndim:
-        raise ValueError(
-            f"axis {axis} is out of bounds for array with {array.ndim} dimensions"
-        )
-
     if axis is None:
         axes = range(array.ndim)
+    elif isinstance(axis, list):
+        axes = axis
     else:
         axes = [axis]
 
+    valid_axes = [i + array.ndim if i < 0 else i for i in axes]
+    for i, axis in enumerate(valid_axes):
+        if axis >= array.ndim or axis < 0:
+            raise ValueError(
+                f"axis {axes[i]} is out of bounds for array with {array.ndim} dimensions"
+            )
+
     offset = 0
-    for axis in axes:
+    for axis in valid_axes:
         axis -= offset
         try:
             if ak.to_regular(array, axis).typestr.split(" * ")[axis] == "1":
