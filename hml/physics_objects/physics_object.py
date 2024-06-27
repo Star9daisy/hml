@@ -62,31 +62,19 @@ class PhysicsObjectBase(PhysicsObject):
         slices = [slice(i, i + 1) if isinstance(i, int) else i for i in self.indices]
         values = ako.take(self._values, slices)
 
-        empty_p4 = ak.Array(
-            [{"pt": None, "eta": None, "phi": None, "mass": None}],
-            with_name="Momentum4D",
-        )
-
         for i, index in enumerate(self.indices):
             if isinstance(index, slice):
                 if index.stop is not None:
-                    if values.ndim - 1 - i > 0:
-                        # start from dim 1 so -1 again
-                        slices = [None] * (values.ndim - 1 - i - 1) + [...]
-                        empty_p4 = empty_p4[*slices]
-                    else:
-                        empty_p4 = empty_p4[0]
-
                     start = index.start or 0
                     required_length = index.stop - start
-                    values = ak.fill_none(
-                        ak.pad_none(values, required_length, axis=i, clip=True),
-                        empty_p4,
-                        axis=i,
-                    )
+                    values = ako.pad_none(values, required_length, axis=i)
+
+        offset = 0
         for i, index in enumerate(self.indices):
+            i -= offset
             if isinstance(index, int):
                 values = ako.squeeze(values, axis=i)
+                offset += 1
 
         return values
 
