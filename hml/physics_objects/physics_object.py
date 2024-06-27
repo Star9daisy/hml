@@ -62,6 +62,7 @@ class PhysicsObjectBase(PhysicsObject):
         slices = [slice(i, i + 1) if isinstance(i, int) else i for i in self.indices]
         values = ako.take(self._values, slices)
 
+        axes_to_squeeze = []
         for i, index in enumerate(self.indices):
             if isinstance(index, slice):
                 if index.stop is not None:
@@ -69,12 +70,10 @@ class PhysicsObjectBase(PhysicsObject):
                     required_length = index.stop - start
                     values = ako.pad_none(values, required_length, axis=i)
 
-        offset = 0
-        for i, index in enumerate(self.indices):
-            i -= offset
-            if isinstance(index, int):
-                values = ako.squeeze(values, axis=i)
-                offset += 1
+            else:
+                axes_to_squeeze.append(i)
+
+        values = ako.squeeze(values, axis=axes_to_squeeze)
 
         return values
 
