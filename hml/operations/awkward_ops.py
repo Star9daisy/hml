@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import math
 from pathlib import Path
+from typing import Callable
 
 import awkward as ak
 import h5py
@@ -315,3 +316,121 @@ def from_hdf5(
             array = ak.concatenate(array)
 
     return array
+
+
+def pad_none(array, target, axis=1):
+    """Pad an array with None values or None records to match the target length.
+
+    Parameters
+    ----------
+    array : ak.Array
+        The array to pad.
+    target : int
+        The target length.
+    axis : int
+        The axis to pad.
+
+    Returns
+    -------
+    ak.Array
+        The padded array.
+
+    Examples
+    --------
+    >>> import awkward as ak
+    >>> from hml.operations import awkward_ops as ako
+
+    >>> number_array = ak.Array([[1, 2], [], [1, 2, 3]])
+    >>> print(number_array.show(type=True, stream=None))
+    type: 3 * var * int64
+    [[1, 2],
+     [],
+     [1, 2, 3]]
+
+    >>> print(ako.pad_none(number_array, 4, axis=0).show(type=True, stream=None))
+    type: 4 * var * ?int64
+    [[1, 2],
+     [],
+     [1, 2, 3],
+     [None]]
+
+    >>> print(ako.pad_none(number_array, 3, axis=1).show(type=True, stream=None))
+    type: 3 * 3 * ?int64
+    [[1, 2, None],
+     [None, None, None],
+     [1, 2, 3]]
+
+    >>> record_array = ak.zip({"x": [[1], [], [1, 2]], "y": [[2], [], [1, 2]]})
+    >>> print(record_array.show(type=True, stream=None))
+    type: 3 * var * {
+        x: int64,
+        y: int64
+    }
+    [[{x: 1, y: 2}],
+     [],
+     [{x: 1, y: 1}, {x: 2, y: 2}]]
+
+    >>> print(ako.pad_none(record_array, 4, axis=0).show(type=True, stream=None))
+    type: 4 * var * {
+        x: ?int64,
+        y: ?int64
+    }
+    [[{x: 1, y: 2}],
+     [],
+     [{x: 1, y: 1}, {x: 2, y: 2}],
+     [{x: None, y: None}]]
+
+    >>> print(ako.pad_none(record_array, 2, axis=1).show(type=True, stream=None))
+    type: 3 * 2 * {
+        x: ?int64,
+        y: ?int64
+    }
+    [[{x: 1, y: 2}, {x: None, y: None}],
+     [{x: None, y: None}, {x: None, y: None}],
+     [{x: 1, y: 1}, {x: 2, y: 2}]]
+    """
+    valid_axis = axis + array.ndim if axis < 0 else axis
+
+    if valid_axis < 0 or valid_axis >= array.ndim:
+        raise ValueError(
+            f"axis {axis} is out of bounds for array with {array.ndim} dimensions"
+        )
+
+    if target == axis == 0:
+        return ak.Array([])
+
+    content = array.layout
+    while True:
+        try:
+            if isinstance(content.content, Callable):
+                break
+        except AttributeError:
+            break
+
+        content = content.content
+
+    if not isinstance(content, ak.contents.RecordArray):
+        none = [None] * (array.ndim - valid_axis - 1)
+        padded = ak.pad_none(array, target, valid_axis, clip=True)
+
+        if len(none) != 0:
+            padded = ak.fill_none(padded, none, valid_axis)
+
+    else:
+        record_name = content.parameters.get("__record__")
+        record_fields = content.fields
+
+        record = ak.Array(
+            [dict(zip(record_fields, [None] * len(record_fields)))],
+            with_name=record_name,
+        )
+
+        if array.ndim - 1 - axis > 0:
+            slices = [None] * (array.ndim - 1 - axis - 1) + [...]
+            record = record[*slices]
+        else:
+            record = record[0]
+
+        padded = ak.fill_none(ak.pad_none(array, target, axis, clip=True), record, axis)
+
+    return padded
