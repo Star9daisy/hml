@@ -32,7 +32,7 @@ jobs:
           export ROOT_INCLUDE_PATH=/root/softwares/madgraph5/Delphes/external
           poetry run pip install tensorflow
 
-          poetry run pytest -vv hml
+          poetry run pytest tests hml
         shell: bash
 
       - name: Upload coverage reports to Codecov
