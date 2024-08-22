@@ -1,8 +1,0 @@
-generate p p > z z, z > j j, z > vl vl~
-output data/pp2zz
-launch
-shower=pythia8
-detector=delphes
-set nevents 100
-set iseed 42
-set htjmin 400
