@@ -1,4 +1,3 @@
-import inspect
 import re
 
 from typeguard import typechecked
