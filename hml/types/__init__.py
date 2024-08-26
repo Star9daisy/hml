@@ -7,6 +7,6 @@ from .utils import (
 )
 
 # isort: on
-from .aliases import ArrayLike, Index, PathLike
+from .aliases import ArrayLike, Index, PathLike, VariableInteger, var
 from .externals import AwkwardArray, NumpyArray, UprootTree
 from .protocols import Registrable, Serializable
