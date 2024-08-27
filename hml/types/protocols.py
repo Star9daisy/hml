@@ -19,15 +19,11 @@ class Serializable(Protocol):
 
 @runtime_checkable
 class Registrable(Serializable, Protocol):
-    """Registrable objects have a name and can be created from it.
+    """Registrable objects have an intrinsic name for registration.
 
     This protocol extends `Serializable` with:
     - `name` property
-    - `from_name` class method
     """
 
     @property
     def name(self) -> str: ...
-
-    @classmethod
-    def from_name(cls, name: str) -> Self: ...
