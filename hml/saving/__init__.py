@@ -3,7 +3,8 @@ from .utils import import_custom_objects
 
 # isort: on
 from .registration import (
-    ALL_REGISTERED_OBJECTS,
+    BUILTIN_REGISTERED_OBJECTS,
+    CUSTOM_REGISTERED_OBJECTS,
     register,
     registered_object,
     retrieve,
