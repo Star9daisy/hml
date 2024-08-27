@@ -1,16 +1,15 @@
-import re
-
 import awkward as ak
 from typeguard import typechecked
 
 from ..events import ROOTEvents
+from ..naming import INDEX_PATTERN
 from ..saving import registered_object
 from ..types import AwkwardArray
 from .physics_object import Single
 
 
 @typechecked
-@registered_object(re.compile("electron(\d*:?\d*)"), is_for_init=True)
+@registered_object(f"electron{INDEX_PATTERN}")
 class Electron(Single):
     def get_array(self, events: ROOTEvents) -> AwkwardArray:
         array = ak.zip(
@@ -27,7 +26,7 @@ class Electron(Single):
 
 
 @typechecked
-@registered_object(re.compile("((?:fat_)?jet)(\d*:?\d*)"), is_for_init=True)
+@registered_object(f"jet{INDEX_PATTERN}")
 class Jet(Single):
     def get_array(self, events: ROOTEvents) -> AwkwardArray:
         n_subjettiness = events[self.key + ".tau[5]"]
@@ -53,8 +52,8 @@ class Jet(Single):
 
 
 @typechecked
-@registered_object(re.compile("missing_et(\d*:?\d*)"), is_for_init=True)
-@registered_object(re.compile("met(\d*:?\d*)"), is_for_init=True)
+@registered_object(f"missing_et{INDEX_PATTERN}")
+@registered_object(f"met{INDEX_PATTERN}")
 class MissingET(Single):
     def get_array(self, events: ROOTEvents) -> AwkwardArray:
         array = ak.zip(
@@ -70,7 +69,7 @@ class MissingET(Single):
 
 
 @typechecked
-@registered_object(re.compile("muon(\d*:?\d*)"), is_for_init=True)
+@registered_object(f"muon{INDEX_PATTERN}")
 class Muon(Single):
     def get_array(self, events: ROOTEvents) -> AwkwardArray:
         array = ak.zip(
@@ -87,7 +86,7 @@ class Muon(Single):
 
 
 @typechecked
-@registered_object(re.compile("photon(\d*:?\d*)"), is_for_init=True)
+@registered_object(f"photon{INDEX_PATTERN}")
 class Photon(Single):
     def get_array(self, events: ROOTEvents) -> AwkwardArray:
         array = ak.zip(
@@ -103,7 +102,7 @@ class Photon(Single):
 
 
 @typechecked
-@registered_object(re.compile("tower(\d*:?\d*)"), is_for_init=True)
+@registered_object(f"tower{INDEX_PATTERN}")
 class Tower(Single):
     def get_array(self, events: ROOTEvents) -> AwkwardArray:
         array = ak.zip(
@@ -119,7 +118,7 @@ class Tower(Single):
 
 
 @typechecked
-@registered_object(re.compile("track(\d*:?\d*)"), is_for_init=True)
+@registered_object(f"track{INDEX_PATTERN}")
 class Track(Single):
     def get_array(self, events: ROOTEvents) -> AwkwardArray:
         array = ak.zip(
