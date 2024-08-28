@@ -222,7 +222,7 @@ def retrieve_constituents_from_eflows(
     eflow_ids: ak.Array,
     eflows: ak.Array,
     builder: ak.ArrayBuilder,
-) -> ak.ArrayBuilder:
+) -> ak.ArrayBuilder:  # pragma: no cover
     """Retrieve the constituents from the eflow branches based on the reference.
 
     Parameters
