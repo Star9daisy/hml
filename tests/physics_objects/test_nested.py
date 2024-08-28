@@ -1,5 +1,7 @@
+import pytest
+
 from hml.events import load_events
-from hml.physics_objects import Constituents
+from hml.physics_objects import Constituents, Jet
 from hml.saving import retrieve
 
 events = load_events("tag_1_delphes_events.root")
@@ -7,51 +9,49 @@ events = load_events("tag_1_delphes_events.root")
 
 def test_constituents():
     # Check __init__
-    csts = Constituents(["jet", "constituents"])
+    csts = Constituents("jet")
+    # Or
+    csts = Constituents(Jet())
 
     # Check __repr__
-    assert repr(csts) == "jet.constituents -> (not read yet)"
+    assert repr(csts) == "jet.constituents -> not read yet"
 
     # Check properties
-    assert csts.keys == ["jet", "constituents"]
-    assert csts.indices == [slice(None), slice(None)]
+    assert csts.key == "constituents"
+    assert csts.index == slice(None)
     assert csts.array.typestr == "0 * unknown"
 
     # Check read
     assert csts.read(events)  # Ensure the returned value is not None
 
-    assert repr(csts) == "jet.constituents -> (pt, eta, phi, mass)"
+    assert repr(csts) == "jet.constituents -> 100 * var * var * {4 observables}"
     assert csts.array.typestr[:19] == "100 * var * var * {"
     assert csts.array.fields == ["pt", "eta", "phi", "mass"]
 
     # Check config
     assert csts.config == {
-        "keys": ["jet", "constituents"],
-        "indices": ["", ""],
-        "class_alias": None,
+        "source": "jet",
+        "key": "constituents",
+        "index": "",
+        "name": None,
     }
 
     # Check from_config
     assert Constituents.from_config(csts.config).config == csts.config
 
     # Check array typestr
-    csts = Constituents(["jet", "constituents"]).read(events)
+    csts = Constituents("jet").read(events)
     assert csts.array.typestr[:19] == "100 * var * var * {"
 
-    csts = Constituents(
-        ["jet", "constituents"],
-        indices=[slice(10), slice(100)],
-    ).read(events)
+    csts = Constituents("jet:10", index=slice(100)).read(events)
     assert csts.array.typestr[:19] == "100 * 10 * 100 * ?{"
 
-    csts = Constituents(
-        ["jet", "constituents"],
-        indices=[0, slice(10)],
-    ).read(events)
+    csts = Constituents("jet0", index=slice(10)).read(events)
     assert csts.array.typestr[:12] == "100 * 10 * ?"
 
     # Check registered names
-    assert retrieve("constituents")
+    assert retrieve("jet0.constituents")
 
-    # Other cases
-    assert Constituents.from_name("jet.constituents").name == "jet.constituents"
+    # Bad case
+    with pytest.raises(ValueError):
+        Constituents("unknown")

@@ -11,27 +11,24 @@ def test_electron():
     e = Electron()
 
     # Check __repr__
-    assert repr(e) == "electron -> (not read yet)"
+    assert repr(e) == "electron -> not read yet"
 
     # Check properties
     assert e.key == "electron"
-    assert Electron().key == Electron(key="Electron").key
     assert e.index == slice(None)
-    assert e.class_alias is None
     assert e.array.typestr == "0 * unknown"
 
     # Check read
     assert e.read(events)  # Ensure the returned value is not None
 
-    assert repr(e) == "electron -> (pt, eta, phi, mass, charge)"
-    assert e.array.typestr[:7] == "100 * 0"
+    assert repr(e) == "electron -> 100 * 0 * {5 observables}"
     assert e.array.fields == ["pt", "eta", "phi", "mass", "charge"]
 
     # Check config
     assert e.config == {
         "key": "electron",
         "index": "",
-        "class_alias": None,
+        "name": None,
     }
 
     # Check from_config
@@ -58,22 +55,17 @@ def test_jet():
     jet = Jet()
 
     # Check __repr__
-    assert repr(jet) == "jet -> (not read yet)"
+    assert repr(jet) == "jet -> not read yet"
 
     # Check properties
     assert jet.key == "jet"
-    assert Jet().key == Jet(key="Jet").key
     assert jet.index == slice(None)
-    assert jet.class_alias is None
     assert jet.array.typestr == "0 * unknown"
 
     # Check read
     assert jet.read(events)  # Ensure the returned value is not None
 
-    assert (
-        repr(jet)
-        == "jet -> (pt, eta, phi, mass, b_tag, tau_tag, charge, tau1, tau2, tau3, tau4, tau5)"
-    )
+    assert repr(jet) == "jet -> 100 * var * {12 observables}"
     assert jet.array.typestr[:9] == "100 * var"
     assert jet.array.fields == [
         "pt",
@@ -94,7 +86,7 @@ def test_jet():
     assert jet.config == {
         "key": "jet",
         "index": "",
-        "class_alias": None,
+        "name": None,
     }
 
     # Check from_config
