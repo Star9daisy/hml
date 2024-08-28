@@ -151,9 +151,6 @@ def show_custom_registered_objects():
     """Show all custom registered objects."""
     print(f"> From {get_registry_file_path().name}:")
     registry = get_registry()
-
-    if len(registry.all()) == 0:
-        print("Empty")
     print(tabulate(registry.all(), headers="keys"))
     print()
 
