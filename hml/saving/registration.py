@@ -122,7 +122,7 @@ def retrieve(name_or_class: str | Registrable) -> object | list[str] | None:
         # If the name is not registered via the decorator, try to retrieve it
         # from the registry.
         registry = get_registry()
-        info = registry.get(Query()["registered_name"] == registered_name)
+        info = registry.get(Query()["registered_name"] == name)
 
         if info is not None:
             name = info["registered_name"]
@@ -139,6 +139,10 @@ def retrieve(name_or_class: str | Registrable) -> object | list[str] | None:
 
             if class_ == cls:
                 registered_names.append(registered_name)
+
+        registry = get_registry()
+        items = registry.search(Query()["class_name"] == class_.__name__)
+        registered_names.extend([item["registered_name"] for item in items])
 
         return registered_names
 
