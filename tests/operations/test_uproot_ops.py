@@ -7,10 +7,9 @@ from hml.operations.uproot_ops import (
     top_level_branch_to_momentum4d,
 )
 
-tree = uproot.open("tag_1_delphes_events.root")["Delphes"]
 
-
-def test_top_level_branch_to_momentum4d():
+def test_top_level_branch_to_momentum4d(root_events_path):
+    tree = uproot.open(root_events_path)["Delphes"]
     for branch in [
         "Particle",
         "Track",
@@ -36,7 +35,8 @@ def test_top_level_branch_to_momentum4d():
             top_level_branch_to_momentum4d(tree["ScalarHT"])
 
 
-def test_sub_level_branch_to_momentum4d():
+def test_sub_level_branch_to_momentum4d(root_events_path):
+    tree = uproot.open(root_events_path)["Delphes"]
     for branch in ["Jet.Constituents", "FatJet.Constituents"]:
         sub_level_branch_to_momentum4d(tree[branch])
 
@@ -47,6 +47,7 @@ def test_sub_level_branch_to_momentum4d():
         sub_level_branch_to_momentum4d(tree["Jet.Particles"])
 
 
-def test_branch_to_momentum4d():
+def test_branch_to_momentum4d(root_events_path):
+    tree = uproot.open(root_events_path)["Delphes"]
     branch_to_momentum4d(tree["Jet"])
     branch_to_momentum4d(tree["Jet.Constituents"])

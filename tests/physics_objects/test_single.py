@@ -2,10 +2,9 @@ from hml.events import load_events
 from hml.physics_objects import Electron, Jet, MissingET, Muon, Photon, Tower, Track
 from hml.saving import retrieve
 
-events = load_events("tag_1_delphes_events.root")
 
-
-def test_electron():
+def test_electron(root_events_path):
+    events = load_events(root_events_path)
 
     # Check __init__
     e = Electron()
@@ -48,8 +47,8 @@ def test_electron():
     assert retrieve("electron")
 
 
-def test_jet():
-    events = load_events("tag_1_delphes_events.root")
+def test_jet(root_events_path):
+    events = load_events(root_events_path)
 
     # Check __init__
     jet = Jet()
@@ -119,7 +118,9 @@ def test_jet():
     assert retrieve("fat_jet")
 
 
-def test_missing_et():
+def test_missing_et(root_events_path):
+    events = load_events(root_events_path)
+
     missing_et = MissingET().read(events)
 
     assert missing_et.array.fields == ["pt", "eta", "phi", "mass"]
@@ -127,28 +128,36 @@ def test_missing_et():
     assert retrieve("met")
 
 
-def test_muon():
+def test_muon(root_events_path):
+    events = load_events(root_events_path)
+
     muon = Muon().read(events)
 
     assert muon.array.fields == ["pt", "eta", "phi", "mass", "charge"]
     assert retrieve("muon")
 
 
-def test_photon():
+def test_photon(root_events_path):
+    events = load_events(root_events_path)
+
     photon = Photon().read(events)
 
     assert photon.array.fields == ["pt", "eta", "phi", "mass"]
     assert retrieve("photon")
 
 
-def test_tower():
+def test_tower(root_events_path):
+    events = load_events(root_events_path)
+
     tower = Tower().read(events)
 
     assert tower.array.fields == ["pt", "eta", "phi", "mass"]
     assert retrieve("tower")
 
 
-def test_track():
+def test_track(root_events_path):
+    events = load_events(root_events_path)
+
     track = Track().read(events)
 
     assert track.array.fields == ["pt", "eta", "phi", "mass"]

@@ -4,10 +4,10 @@ from hml.events import load_events
 from hml.physics_objects import Constituents, Jet
 from hml.saving import retrieve
 
-events = load_events("tag_1_delphes_events.root")
 
+def test_constituents(root_events_path):
+    events = load_events(root_events_path)
 
-def test_constituents():
     # Check __init__
     csts = Constituents("jet")
     # Or

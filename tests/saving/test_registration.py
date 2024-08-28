@@ -9,10 +9,10 @@ from hml.saving.registration import (
     show_custom_registered_objects,
 )
 
-set_registry_file_path("tests/saving/registry.json")
 
+def test_register(registry_in_tests):
+    set_registry_file_path(registry_in_tests)
 
-def test_register():
     init_registry()
     tau21 = NSubjettiness(2, 1)
     register(tau21)
@@ -21,7 +21,9 @@ def test_register():
         register(tau21)
 
 
-def test_retrieve():
+def test_retrieve(registry_in_tests):
+    set_registry_file_path(registry_in_tests)
+
     init_registry()
     retrieved = retrieve("tau21")
     assert isinstance(retrieved, NSubjettiness)
@@ -35,8 +37,6 @@ def test_retrieve():
     assert len(retrieved) == 2
 
 
-def test_show_custom_registered_objects():
+def test_show_custom_registered_objects(registry_in_tests):
+    set_registry_file_path(registry_in_tests)
     show_custom_registered_objects()
-
-
-set_registry_file_path(REGISTRY_FILE_PATH)

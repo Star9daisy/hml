@@ -5,9 +5,9 @@ import uproot
 from hml.events import ROOTEvents
 
 
-def test_root_events():
+def test_root_events(root_events_path):
     # Init
-    tree = uproot.open("tag_1_delphes_events.root")["Delphes"]
+    tree = uproot.open(root_events_path)["Delphes"]
     events = ROOTEvents(tree)
 
     # Check __len__
@@ -22,7 +22,7 @@ def test_root_events():
 
     # Check load
     # Good
-    assert ROOTEvents.load("tag_1_delphes_events.root")
+    assert ROOTEvents.load(root_events_path)
     # Bad
     with pytest.raises(ValueError):
         ROOTEvents.load("tag_1_delphes_events.root.txt")
