@@ -26,3 +26,12 @@ def test_root_events():
     # Bad
     with pytest.raises(ValueError):
         ROOTEvents.load("tag_1_delphes_events.root.txt")
+
+    # Check nested items
+    # Good
+    array = events["jet.constituents"]
+    assert array.ndim == 3
+
+    # Bad
+    with pytest.raises(ValueError):
+        events["jet.particles"]

@@ -2,6 +2,7 @@ import inflection
 import uproot
 from typeguard import typechecked
 
+from ..operations.uproot_ops import constituents_to_momentum4d
 from ..types import AwkwardArray, PathLike, UprootTree, pathlike_to_path
 from .events import Events
 
@@ -40,7 +41,17 @@ class ROOTEvents(Events):
         if key not in self.keys:
             raise KeyError(f"Key '{key}' not found in the events.")
 
-        return self.tree[self.mappings[key]].array()
+        array = self.tree[self.mappings[key]].array()
+
+        if array.layout[-1].parameters.get("__record__") not in ["TRef", "TRefArray"]:
+            return array
+
+        # Currently only supports to retrieve jet-related constituents
+        if "Jet" in self.mappings[key] and "Constituents" in self.mappings[key]:
+            return constituents_to_momentum4d(self.tree[self.mappings[key]])
+
+        else:
+            raise ValueError("Only jet-related constituents are supported.")
 
     @property
     def tree(self) -> UprootTree:

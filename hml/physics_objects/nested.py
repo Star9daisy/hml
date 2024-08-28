@@ -7,7 +7,6 @@ from typeguard import typechecked
 from ..events import ROOTEvents
 from ..naming import INDEX_PATTERN
 from ..operations.awkward_ops import pad_none
-from ..operations.uproot_ops import constituents_to_momentum4d
 from ..saving import registered_object, retrieve
 from ..types import AwkwardArray, Index, index_to_str, str_to_index
 from .physics_object import PhysicsObject
@@ -104,8 +103,7 @@ class Constituents(Nested):
         super().__init__(source, key, index, name)
 
     def get_array(self, events: ROOTEvents) -> AwkwardArray:
-        original_key = events.mappings[self.source.key + "." + self.key]
-        array = constituents_to_momentum4d(events.tree[original_key])
+        array = events[self.source.key + "." + self.key]
         array = ak.zip(
             {
                 "pt": array.pt,
