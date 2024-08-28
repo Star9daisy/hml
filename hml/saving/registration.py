@@ -1,4 +1,3 @@
-import inspect
 import re
 
 from inflection import underscore
@@ -32,17 +31,12 @@ def registered_object(name: str | None = None):
     """
 
     @typechecked
-    def decorator(obj: Registrable):
-        # Class or instance?
-        if inspect.isclass(obj):
-            registered_name = underscore(obj.__name__) if name is None else name
-            class_ = obj
-        else:
-            registered_name = obj.name if name is None else name
-            class_ = obj.__class__
+    def decorator(cls: Registrable):
+        registered_name = underscore(cls.__name__) if name is None else name
+        class_ = cls
 
         # Custom or built-in object?
-        if obj.__module__ == get_custom_objects_file_path().stem:
+        if cls.__module__ == get_custom_objects_file_path().stem:
             registered_objects = CUSTOM_REGISTERED_OBJECTS
         else:
             registered_objects = BUILTIN_REGISTERED_OBJECTS
@@ -56,7 +50,7 @@ def registered_object(name: str | None = None):
                 }
             )
         )
-        return obj
+        return cls
 
     return decorator
 
