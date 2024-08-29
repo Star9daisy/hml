@@ -79,4 +79,9 @@ keep-runtime-typing = true
 ignore = ["E402"]
 
 [tool.pytest.ini_options]
-addopts = "--cov=hml --cov-report=html --cov-report=xml --cov-report=term --doctest-modules"
+addopts = [
+    "--cov=hml",
+    "--cov-report=xml",
+    "--cov-report=term:skip-covered",
+    "-vv"
+]
