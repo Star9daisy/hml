@@ -4,7 +4,7 @@ from hml.saving.registration import registered_object
 
 
 @typechecked
-@registered_object(name="tau(?P<m>\d)(?P<n>\d)")
+@registered_object(name=r"tau(?P<m>\d)(?P<n>\d)")
 class NSubjettiness:
     def __init__(self, m: int, n: int, name: str | None = None) -> None:
         self.m = m

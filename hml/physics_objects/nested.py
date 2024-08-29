@@ -90,7 +90,7 @@ class Nested(PhysicsObject):
 
 @typechecked
 @registered_object(
-    f"(?P<source>[a-zA-Z_]+\d*:?\d*)\.(?P<key>constituents){INDEX_PATTERN}"
+    rf"(?P<source>[a-zA-Z_]+\d*:?\d*)\.(?P<key>constituents){INDEX_PATTERN}"
 )
 class Constituents(Nested):
     def __init__(
