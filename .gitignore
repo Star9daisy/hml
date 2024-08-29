@@ -1,10 +1,6 @@
-**/playground
-**/.vscode/settings.json
 **/__pycache__
-**/site
-.env
-*coverage*
+**/*coverage*
 **/dist
-**/checkpoints
+
+**/playground
 **/archive
-**/htmlcov
