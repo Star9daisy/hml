@@ -1,14 +1,14 @@
 [tool.poetry]
-name = "hep-ml-lab"
-version = "0.5.0"
-description = "An end-to-end framework used for research combining high-energy physics phenomenology with machine learning."
-license = "MIT"
 authors = ["Star9daisy <star9daisy@outlook.com>"]
-readme = "README.md"
-homepage = "https://github.com/Star9daisy/hep-ml-lab"
+description = "An end-to-end framework used for research combining high-energy physics phenomenology with machine learning."
 documentation = "https://star9daisy.github.io/hep-ml-lab/"
+homepage = "https://github.com/Star9daisy/hep-ml-lab"
 keywords = ["high energy physics", "machine learning", "framework"]
-packages = [{ include = "hml" }]
+license = "MIT"
+name = "hep-ml-lab"
+packages = [{include = "hml"}]
+readme = "README.md"
+version = "0.5.0"
 
 [tool.poetry.dependencies]
 awkward = "^2.5.1"
@@ -39,7 +39,7 @@ mkdocs = "^1.4.3"
 mkdocs-exclude = "^1.0.2"
 mkdocs-jupyter = "^0.24.6"
 mkdocs-material = "^9.1.15"
-mkdocstrings = { extras = ["python"], version = "^0.22.0" }
+mkdocstrings = {extras = ["python"], version = "^0.22.0"}
 pygments = "^2.16.1"
 pytest = "^7.4.3"
 pytest-cov = "^4.1.0"
@@ -56,8 +56,8 @@ DEP004 = ["pytest"]
 ignore_notebooks = true
 
 [build-system]
-requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+requires = ["poetry-core"]
 
 [tool.coverage.report]
 exclude_lines = ["pragma: no cover", "@abstract", "raise NotImplementedError"]
@@ -78,8 +78,8 @@ ignore = ["E402"]
 
 [tool.pytest.ini_options]
 addopts = [
-    "--cov=hml",
-    "--cov-report=xml",
-    "--cov-report=term:skip-covered",
-    "-vv"
+  "--cov=hml",
+  "--cov-report=xml",
+  "--cov-report=term:skip-covered",
+  "-vv",
 ]
