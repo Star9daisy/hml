@@ -101,7 +101,7 @@ class Electron(Single):
 
 
 @typechecked
-@registered_object(f"(?P<key>(?:fat_)?jet){INDEX_PATTERN}")
+@registered_object(f"(?P<key>(?:fat_?)?jet){INDEX_PATTERN}")
 class Jet(Single):
     def __init__(
         self,

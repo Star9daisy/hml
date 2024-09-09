@@ -23,13 +23,17 @@ class ROOTEvents(Events):
         self._tree = tree
 
         # Convert the original keys to underscore lower case
-        keys = tree.keys(full_paths=False)
-        snake_case = [inflection.underscore(key) for key in keys]
+        mixed_case = tree.keys(full_paths=False)
+        snake_case = [inflection.underscore(key) for key in mixed_case]
+        camel_case = [inflection.camelize(key) for key in mixed_case]
+        lower_case = [key.lower() for key in mixed_case]
 
         # Relate new keys to the original ones
         mappings = {}
-        mappings.update({k: k for k in keys})
-        mappings.update({snake: k for snake, k in zip(snake_case, keys)})
+        mappings.update({key: key for key in mixed_case})
+        mappings.update({snake: mixed for snake, mixed in zip(snake_case, mixed_case)})
+        mappings.update({camel: mixed for camel, mixed in zip(camel_case, mixed_case)})
+        mappings.update({lower: mixed for lower, mixed in zip(lower_case, mixed_case)})
         self._mappings = mappings
 
         self._keys = list(mappings.keys())
@@ -38,17 +42,19 @@ class ROOTEvents(Events):
         return self.tree.num_entries
 
     def __getitem__(self, key: str) -> AwkwardArray:
-        if key not in self.keys:
+        lowered_key = inflection.underscore(key).replace("_", "")
+        if lowered_key not in self.mappings:
             raise KeyError(f"Key '{key}' not found in the events.")
 
-        array = self.tree[self.mappings[key]].array()
+        true_key = self.mappings[lowered_key]
+        array = self.tree[true_key].array()
 
         if array.layout[-1].parameters.get("__record__") not in ["TRef", "TRefArray"]:
             return array
 
         # Currently only supports to retrieve jet-related constituents
-        if "Jet" in self.mappings[key] and "Constituents" in self.mappings[key]:
-            return constituents_to_momentum4d(self.tree[self.mappings[key]])
+        if "Jet" in true_key and "Constituents" in true_key:
+            return constituents_to_momentum4d(self.tree[true_key])
 
         else:
             raise ValueError("Only jet-related constituents are supported.")

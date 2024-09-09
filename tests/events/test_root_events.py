@@ -35,3 +35,7 @@ def test_root_events(root_events_path):
     # Bad
     with pytest.raises(ValueError):
         events["jet.particles"]
+
+    # Check keys
+    assert "fatjet.constituents" in events.keys
+    assert "FatJet.Constituents" in events.keys
