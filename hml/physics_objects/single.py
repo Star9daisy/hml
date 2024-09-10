@@ -93,7 +93,11 @@ class Jet(Single):
         self.algorithm = algorithm
         self.radius = radius
 
-        if self.algorithm is not None and self.radius is not None:
+        if (
+            kwargs.get("name") is None
+            and self.algorithm is not None
+            and self.radius is not None
+        ):
             prefix = f"{self.algorithm}{self.radius*10:.0f}"
             self._name = prefix + self._name
 
@@ -118,21 +122,9 @@ class Jet(Single):
                 }
             )
 
-        if "constituents" in self.key:
-            key = events.mappings[self.key]
-        else:
-            key = events.mappings[self.key + ".constituents"]
-
+        key = events.mappings[self.key + ".constituents"]
         constituents_branch = events.tree[key]
         constituents = constituents_to_momentum4d(constituents_branch)
-        self.constituents = ak.zip(
-            {
-                "pt": constituents.pt,
-                "eta": constituents.eta,
-                "phi": constituents.phi,
-                "mass": constituents.mass,
-            }
-        )
 
         jet_def = fj.JetDefinition(get_algorithm(self.algorithm), self.radius)
         cluster = fj.ClusterSequence(ak.flatten(constituents, -1), jet_def)
@@ -142,6 +134,14 @@ class Jet(Single):
             {"pt": jets.pt, "eta": jets.eta, "phi": jets.phi, "mass": jets.mass}
         )
         jets = jets[sort_indices]
+        self.constituents = ak.zip(
+            {
+                "pt": cluster.constituents().pt,
+                "eta": cluster.constituents().eta,
+                "phi": cluster.constituents().phi,
+                "mass": cluster.constituents().mass,
+            }
+        )
 
         return ak.values_astype(jets, "float32")
 
