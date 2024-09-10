@@ -27,7 +27,7 @@ def test_electron(root_events_path):
     assert e.config == {
         "key": "electron",
         "index": "",
-        "name": None,
+        "name": "electron",
     }
 
     # Check from_config
@@ -83,9 +83,11 @@ def test_jet(root_events_path):
 
     # Check config
     assert jet.config == {
+        "algorithm": None,
+        "radius": None,
         "key": "jet",
         "index": "",
-        "name": None,
+        "name": "jet",
     }
 
     # Check from_config

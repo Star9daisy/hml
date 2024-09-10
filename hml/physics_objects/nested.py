@@ -26,7 +26,8 @@ class Nested(PhysicsObject):
         else:
             self._source = source
 
-        self._name = self.source.name + self._name
+        if kwargs.get("name") is None:
+            self._name = self.source.name + "." + self._name
 
     @property
     def source(self) -> PhysicsObject:

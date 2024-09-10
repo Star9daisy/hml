@@ -33,7 +33,7 @@ def test_constituents(root_events_path):
         "source": "jet",
         "key": "constituents",
         "index": "",
-        "name": None,
+        "name": "jet.constituents",
     }
 
     # Check from_config
