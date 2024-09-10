@@ -2,11 +2,13 @@ from abc import abstractmethod
 from typing import Self
 
 import awkward as ak
+import fastjet as fj
 from typeguard import typechecked
 
 from ..events import ROOTEvents
 from ..naming import INDEX_PATTERN
 from ..operations.awkward_ops import pad_none
+from ..operations.fastjet_ops import get_algorithm
 from ..saving import registered_object, retrieve
 from ..types import AwkwardArray, Index, index_to_str, str_to_index
 from .physics_object import PhysicsObject
@@ -33,7 +35,7 @@ class Nested(PhysicsObject):
         super().__init__(key, index, name)
 
     @property
-    def source(self) -> Single:
+    def source(self) -> PhysicsObject:
         return self._source
 
     @abstractmethod
@@ -89,13 +91,11 @@ class Nested(PhysicsObject):
 
 
 @typechecked
-@registered_object(
-    rf"(?P<source>[a-zA-Z_]+\d*:?\d*)\.(?P<key>constituents){INDEX_PATTERN}"
-)
+@registered_object(rf"(?P<source>[\w:._]+)\.(?P<key>constituents){INDEX_PATTERN}")
 class Constituents(Nested):
     def __init__(
         self,
-        source: str | Single,
+        source: str | Single | Nested,
         key: str = "constituents",
         index: int | slice = slice(None),
         name: str | None = None,
@@ -103,6 +103,10 @@ class Constituents(Nested):
         super().__init__(source, key, index, name)
 
     def get_array(self, events: ROOTEvents) -> AwkwardArray:
+        self.source.read(events)
+        if hasattr(self.source, "constituents"):
+            return self.source.constituents
+
         array = events[self.source.key + "." + self.key]
         array = ak.zip(
             {
@@ -114,3 +118,34 @@ class Constituents(Nested):
         )
 
         return array
+
+
+@typechecked
+@registered_object(rf"(?P<source>[\w:._]+)\.(?P<key>reclustered){INDEX_PATTERN}")
+class Reclustered(Nested):
+    def __init__(
+        self,
+        source: str | Single,
+        key: str = "reclustered",
+        index: int | slice = slice(None),
+        name: str | None = None,
+    ) -> None:
+        super().__init__(source, key, index, name)
+
+    def get_array(self, events: ROOTEvents) -> AwkwardArray:
+        self.source.read(events)
+
+        self.constituents = self.source.constituents
+        self.algorithm = self.source.algorithm
+        self.radius = self.source.radius
+
+        jet_def = fj.JetDefinition(get_algorithm(self.algorithm), self.radius)
+        cluster = fj.ClusterSequence(self.constituents, jet_def)
+        jets = cluster.inclusive_jets()
+        sort_indices = ak.argsort(jets.pt, ascending=False)
+        jets = ak.zip(
+            {"pt": jets.pt, "eta": jets.eta, "phi": jets.phi, "mass": jets.mass}
+        )
+        jets = jets[sort_indices]
+
+        return ak.values_astype(jets, "float32")

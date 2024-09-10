@@ -5,5 +5,5 @@ from .single import Single
 from .nested import Nested
 
 # # isort: on
-from .nested import Constituents
+from .nested import Constituents, Reclustered
 from .single import Electron, Jet, MissingET, Muon, Photon, Tower, Track

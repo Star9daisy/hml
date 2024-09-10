@@ -1,12 +1,15 @@
 from abc import abstractmethod
-from typing import Self
+from typing import Literal, Self
 
 import awkward as ak
+import fastjet as fj
 from typeguard import typechecked
 
 from ..events import ROOTEvents
 from ..naming import INDEX_PATTERN
 from ..operations.awkward_ops import pad_none
+from ..operations.fastjet_ops import get_algorithm
+from ..operations.uproot_ops import constituents_to_momentum4d
 from ..saving import registered_object
 from ..types import AwkwardArray, Index, index_to_str, str_to_index
 from .physics_object import PhysicsObject
@@ -101,37 +104,99 @@ class Electron(Single):
 
 
 @typechecked
-@registered_object(f"(?P<key>(?:fat_?)?jet){INDEX_PATTERN}")
+@registered_object(
+    f"(?P<algorithm>(?:kt|ca|ak))?(?P<radius>[0-9]+)?(?P<key>(?:fat_?)?jet){INDEX_PATTERN}"
+)
 class Jet(Single):
     def __init__(
         self,
+        algorithm: Literal["kt", "ca", "ak"] | None = None,
+        radius: float | None = None,
         key: str = "jet",
         index: int | slice = slice(None),
         name: str | None = None,
     ) -> None:
         super().__init__(key, index, name)
+        self.algorithm = algorithm
+        self.radius = radius
+
+    @property
+    def name(self) -> str:
+        name = super().name
+
+        if self.algorithm is not None and self.radius is not None:
+            name = f"{self.algorithm}{self.radius*10:.0f}{name}"
+
+        return name
 
     def get_array(self, events: ROOTEvents) -> AwkwardArray:
-        n_subjettiness = events[self.key + ".tau[5]"]
+        if self.algorithm is None or self.radius is None:
+            n_subjettiness = events[self.key + ".tau[5]"]
 
-        array = ak.zip(
+            return ak.zip(
+                {
+                    "pt": events[self.key + ".pt"],
+                    "eta": events[self.key + ".eta"],
+                    "phi": events[self.key + ".phi"],
+                    "mass": events[self.key + ".mass"],
+                    "b_tag": events[self.key + ".b_tag"],
+                    "tau_tag": events[self.key + ".tau_tag"],
+                    "charge": events[self.key + ".charge"],
+                    "tau1": n_subjettiness[..., 0],
+                    "tau2": n_subjettiness[..., 1],
+                    "tau3": n_subjettiness[..., 2],
+                    "tau4": n_subjettiness[..., 3],
+                    "tau5": n_subjettiness[..., 4],
+                }
+            )
+
+        if "constituents" in self.key:
+            key = events.mappings[self.key]
+        else:
+            key = events.mappings[self.key + ".constituents"]
+
+        constituents_branch = events.tree[key]
+        constituents = constituents_to_momentum4d(constituents_branch)
+        self.constituents = ak.zip(
             {
-                "pt": events[self.key + ".pt"],
-                "eta": events[self.key + ".eta"],
-                "phi": events[self.key + ".phi"],
-                "mass": events[self.key + ".mass"],
-                "b_tag": events[self.key + ".b_tag"],
-                "tau_tag": events[self.key + ".tau_tag"],
-                "charge": events[self.key + ".charge"],
-                "tau1": n_subjettiness[..., 0],
-                "tau2": n_subjettiness[..., 1],
-                "tau3": n_subjettiness[..., 2],
-                "tau4": n_subjettiness[..., 3],
-                "tau5": n_subjettiness[..., 4],
+                "pt": constituents.pt,
+                "eta": constituents.eta,
+                "phi": constituents.phi,
+                "mass": constituents.mass,
             }
         )
 
-        return array
+        jet_def = fj.JetDefinition(get_algorithm(self.algorithm), self.radius)
+        cluster = fj.ClusterSequence(ak.flatten(constituents, -1), jet_def)
+        jets = cluster.inclusive_jets()
+        sort_indices = ak.argsort(jets.pt, ascending=False)
+        jets = ak.zip(
+            {"pt": jets.pt, "eta": jets.eta, "phi": jets.phi, "mass": jets.mass}
+        )
+        jets = jets[sort_indices]
+
+        return ak.values_astype(jets, "float32")
+
+    @property
+    def config(self) -> dict:
+        config = super().config
+        config["algorithm"] = self.algorithm
+        config["radius"] = self.radius
+        return config
+
+    @classmethod
+    def from_config(cls, config: dict) -> Self:
+        radius = config.get("radius")
+        if radius is not None:
+            radius = radius if isinstance(radius, float) else float(radius) / 10
+
+        return cls(
+            algorithm=config.get("algorithm"),
+            radius=radius,
+            key=config["key"],
+            index=str_to_index(config["index"]),
+            name=config.get("name"),
+        )
 
 
 @typechecked
