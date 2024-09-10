@@ -11,20 +11,12 @@ from ..operations.awkward_ops import pad_none
 from ..operations.fastjet_ops import get_algorithm
 from ..operations.uproot_ops import constituents_to_momentum4d
 from ..saving import registered_object
-from ..types import AwkwardArray, Index, index_to_str, str_to_index
+from ..types import AwkwardArray, index_to_str, str_to_index
 from .physics_object import PhysicsObject
 
 
 @typechecked
 class Single(PhysicsObject):
-    def __init__(
-        self,
-        key: str,
-        index: Index = slice(None),
-        name: str | None = None,
-    ) -> None:
-        super().__init__(key, index, name)
-
     @abstractmethod
     def get_array(self, events: ROOTEvents) -> AwkwardArray: ...
 
@@ -53,13 +45,6 @@ class Single(PhysicsObject):
         return self
 
     @property
-    def name(self) -> str:
-        if self._name:
-            return self._name
-
-        return self.key + index_to_str(self.index)
-
-    @property
     def config(self) -> dict:
         return {
             "key": self.key,
@@ -72,23 +57,13 @@ class Single(PhysicsObject):
         return cls(
             key=config["key"],
             index=str_to_index(config["index"]),
-            name=config.get(
-                "name"
-            ),  # When retrieved from a pattern, name is not present
+            name=config.get("name"),
         )
 
 
 @typechecked
 @registered_object(f"(?P<key>electron){INDEX_PATTERN}")
 class Electron(Single):
-    def __init__(
-        self,
-        key: str = "electron",
-        index: int | slice = slice(None),
-        name: str | None = None,
-    ) -> None:
-        super().__init__(key, index, name)
-
     def get_array(self, events: ROOTEvents) -> AwkwardArray:
         array = ak.zip(
             {
@@ -112,22 +87,15 @@ class Jet(Single):
         self,
         algorithm: Literal["kt", "ca", "ak"] | None = None,
         radius: float | None = None,
-        key: str = "jet",
-        index: int | slice = slice(None),
-        name: str | None = None,
+        **kwargs,
     ) -> None:
-        super().__init__(key, index, name)
+        super().__init__(**kwargs)
         self.algorithm = algorithm
         self.radius = radius
 
-    @property
-    def name(self) -> str:
-        name = super().name
-
         if self.algorithm is not None and self.radius is not None:
-            name = f"{self.algorithm}{self.radius*10:.0f}{name}"
-
-        return name
+            prefix = f"{self.algorithm}{self.radius*10:.0f}"
+            self._name = prefix + self._name
 
     def get_array(self, events: ROOTEvents) -> AwkwardArray:
         if self.algorithm is None or self.radius is None:
@@ -203,14 +171,6 @@ class Jet(Single):
 @registered_object(f"(?P<key>missing_et){INDEX_PATTERN}")
 @registered_object(f"(?P<key>met){INDEX_PATTERN}")
 class MissingET(Single):
-    def __init__(
-        self,
-        key: str = "missing_et",
-        index: int | slice = slice(None),
-        name: str | None = None,
-    ) -> None:
-        super().__init__(key, index, name)
-
     def get_array(self, events: ROOTEvents) -> AwkwardArray:
         array = ak.zip(
             {
@@ -227,14 +187,6 @@ class MissingET(Single):
 @typechecked
 @registered_object(f"(?P<key>muon){INDEX_PATTERN}")
 class Muon(Single):
-    def __init__(
-        self,
-        key: str = "muon",
-        index: int | slice = slice(None),
-        name: str | None = None,
-    ) -> None:
-        super().__init__(key, index, name)
-
     def get_array(self, events: ROOTEvents) -> AwkwardArray:
         array = ak.zip(
             {
@@ -252,14 +204,6 @@ class Muon(Single):
 @typechecked
 @registered_object(f"(?P<key>photon){INDEX_PATTERN}")
 class Photon(Single):
-    def __init__(
-        self,
-        key: str = "photon",
-        index: int | slice = slice(None),
-        name: str | None = None,
-    ) -> None:
-        super().__init__(key, index, name)
-
     def get_array(self, events: ROOTEvents) -> AwkwardArray:
         array = ak.zip(
             {
@@ -276,14 +220,6 @@ class Photon(Single):
 @typechecked
 @registered_object(f"(?P<key>tower){INDEX_PATTERN}")
 class Tower(Single):
-    def __init__(
-        self,
-        key: str = "tower",
-        index: int | slice = slice(None),
-        name: str | None = None,
-    ) -> None:
-        super().__init__(key, index, name)
-
     def get_array(self, events: ROOTEvents) -> AwkwardArray:
         array = ak.zip(
             {
@@ -300,14 +236,6 @@ class Tower(Single):
 @typechecked
 @registered_object(f"(?P<key>track){INDEX_PATTERN}")
 class Track(Single):
-    def __init__(
-        self,
-        key: str = "track",
-        index: int | slice = slice(None),
-        name: str | None = None,
-    ) -> None:
-        super().__init__(key, index, name)
-
     def get_array(self, events: ROOTEvents) -> AwkwardArray:
         array = ak.zip(
             {

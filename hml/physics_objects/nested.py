@@ -10,20 +10,14 @@ from ..naming import INDEX_PATTERN
 from ..operations.awkward_ops import pad_none
 from ..operations.fastjet_ops import get_algorithm
 from ..saving import registered_object, retrieve
-from ..types import AwkwardArray, Index, index_to_str, str_to_index
+from ..types import AwkwardArray, index_to_str, str_to_index
 from .physics_object import PhysicsObject
-from .single import Single
 
 
 @typechecked
 class Nested(PhysicsObject):
-    def __init__(
-        self,
-        source: str | Single,
-        key: str,
-        index: Index = slice(None),
-        name: str | None = None,
-    ) -> None:
+    def __init__(self, source: str | PhysicsObject, **kwargs) -> None:
+        super().__init__(**kwargs)
 
         if isinstance(source, str):
             self._source = retrieve(source)
@@ -32,7 +26,7 @@ class Nested(PhysicsObject):
         else:
             self._source = source
 
-        super().__init__(key, index, name)
+        self._name = self.source.name + self._name
 
     @property
     def source(self) -> PhysicsObject:
@@ -65,13 +59,6 @@ class Nested(PhysicsObject):
         return self
 
     @property
-    def name(self) -> str:
-        if self._name:
-            return self._name
-
-        return f"{self.source.name}.{self.key}{index_to_str(self.index)}"
-
-    @property
     def config(self) -> dict:
         return {
             "source": self.source.name,
@@ -93,15 +80,6 @@ class Nested(PhysicsObject):
 @typechecked
 @registered_object(rf"(?P<source>[\w:._]+)\.(?P<key>constituents){INDEX_PATTERN}")
 class Constituents(Nested):
-    def __init__(
-        self,
-        source: str | Single | Nested,
-        key: str = "constituents",
-        index: int | slice = slice(None),
-        name: str | None = None,
-    ) -> None:
-        super().__init__(source, key, index, name)
-
     def get_array(self, events: ROOTEvents) -> AwkwardArray:
         self.source.read(events)
         if hasattr(self.source, "constituents"):
@@ -123,15 +101,6 @@ class Constituents(Nested):
 @typechecked
 @registered_object(rf"(?P<source>[\w:._]+)\.(?P<key>reclustered){INDEX_PATTERN}")
 class Reclustered(Nested):
-    def __init__(
-        self,
-        source: str | Single,
-        key: str = "reclustered",
-        index: int | slice = slice(None),
-        name: str | None = None,
-    ) -> None:
-        super().__init__(source, key, index, name)
-
     def get_array(self, events: ROOTEvents) -> AwkwardArray:
         self.source.read(events)
 
