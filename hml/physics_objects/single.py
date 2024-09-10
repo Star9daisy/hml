@@ -36,12 +36,6 @@ class Single(PhysicsObject):
             padded = array
 
         self._array = padded[:, self.index]
-
-        try:
-            self._array = ak.to_regular(self._array, axis=None)
-        except Exception:
-            pass
-
         return self
 
     @property

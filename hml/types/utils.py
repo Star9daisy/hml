@@ -59,7 +59,7 @@ def str_to_index(string: str) -> Index:
 def array_to_momentum(array: AwkwardArray) -> MomentumArray:
     """Convert an awkward array to a momentum array."""
     # Build a new array to avoid jaggedness issues
-    array = ak.from_iter(array)
+    # array = ak.from_iter(array)
 
     momentum = ak.zip({i: array[i] for i in array.fields}, with_name="Momentum4D")
     momentum = ak.values_astype(momentum, "float32")

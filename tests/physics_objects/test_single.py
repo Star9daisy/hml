@@ -26,7 +26,7 @@ def test_electron(events):
     # Methods ---------------------------------------------------------------- #
     assert obj.read(events)
     assert repr(obj) == "electron: 5 observables"
-    assert obj.array.typestr.startswith("100 * 0 * {")
+    assert obj.array.typestr.startswith("100 * var * {")
     assert obj.array.fields == ["pt", "eta", "phi", "mass", "charge"]
 
     # Class methods ---------------------------------------------------------- #
@@ -41,7 +41,7 @@ def test_electron(events):
     assert obj.array.typestr.startswith("100 * 10 * ?{")
 
     obj = Electron(index=slice(10, None)).read(events)
-    assert obj.array.typestr.startswith("100 * 0 * {")
+    assert obj.array.typestr.startswith("100 * var * {")
 
     # Check registered names
     assert retrieve("electron")
@@ -106,7 +106,7 @@ def test_directly_retrieved_jet(events):
     assert obj.array.typestr.startswith("100 * var * {")
 
     obj = Jet(index=slice(10, None)).read(events)
-    assert obj.array.typestr.startswith("100 * 0 * {")
+    assert obj.array.typestr.startswith("100 * var * {")
 
     obj = Jet(index=slice(0, 10)).read(events)
     assert obj.array.typestr.startswith("100 * 10 * ?")
