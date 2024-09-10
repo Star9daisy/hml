@@ -1,4 +1,3 @@
-import re
 from abc import ABC, abstractmethod
 from typing import Self
 
@@ -26,14 +25,10 @@ class PhysicsObject(ABC):
         self._name = name if name is not None else f"{self.key}{index_str}"
 
     def __repr__(self) -> str:
-        if not self.array.fields:
-            return f"{self.name} -> not read yet"
+        if self.array.typestr == "0 * unknown":
+            return f"{self.name}: not read yet"
 
-        n_observables = len(self.array.fields)
-        description = re.sub(
-            r"\{.*?\}", f"{{{n_observables} observables}}", self.array.typestr
-        )
-        return f"{self.name} -> {description}"
+        return f"{self.name}: {len(self.array.fields)} observables"
 
     @property
     def key(self) -> str:
