@@ -65,7 +65,7 @@ class Observable(ABC):
 
         if self.physics_object is None:
             config["physics_object"] = None
-        if not isinstance(self.physics_object, list):
+        elif not isinstance(self.physics_object, list):
             config["physics_object"] = self.physics_object.name
         else:
             config["physics_object"] = [obj.name for obj in self.physics_object]
@@ -74,16 +74,15 @@ class Observable(ABC):
         return config
 
     @classmethod
-    def from_config(cls, config: dict) -> "Observable":
+    def from_config(cls, config: dict) -> Self:
         physics_object = config["physics_object"]
 
         if physics_object is None:
             physics_object = None
         elif isinstance(physics_object, str):
             physics_object = parse_physics_object(physics_object)
-        elif isinstance(physics_object, list):
+        else:
             physics_object = [parse_physics_object(obj) for obj in physics_object]
 
         name = config.get("name")
-
         return cls(physics_object=physics_object, name=name)
