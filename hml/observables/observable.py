@@ -7,7 +7,6 @@ from typeguard import typechecked
 
 from ..events import Events
 from ..physics_objects import PhysicsObject, parse_physics_object
-from ..saving import deserialize, serialize
 from ..types import AwkwardArray
 
 
@@ -15,24 +14,23 @@ from ..types import AwkwardArray
 class Observable(ABC):
     def __init__(
         self,
-        physics_object: (
-            str | list[str] | PhysicsObject | list[PhysicsObject] | None
-        ) = None,
+        physics_object: PhysicsObject | list[PhysicsObject] | None = None,
         name: str | None = None,
     ) -> None:
-        if isinstance(physics_object, str):
-            self._physics_object = parse_physics_object(physics_object)
-        elif isinstance(physics_object, PhysicsObject):
-            self._physics_object = physics_object
-        elif isinstance(physics_object, list):
-            self._physics_object = [
-                parse_physics_object(obj) if isinstance(obj, str) else obj
-                for obj in physics_object
-            ]
-        else:
-            self._physics_object = None
+        self._physics_object = physics_object
 
-        self._name = name
+        if name is not None:
+            self._name = name
+
+        classname = inflection.underscore(self.__class__.__name__)
+        if physics_object is not None:
+            objs = (
+                physics_object if isinstance(physics_object, list) else [physics_object]
+            )
+            self._name = ",".join([obj.name for obj in objs]) + "." + classname
+        else:
+            self._name = classname
+
         self._array = ak.Array([])
 
     def __repr__(self) -> str:
@@ -47,14 +45,7 @@ class Observable(ABC):
 
     @property
     def name(self) -> str:
-        if self._name:
-            return self._name
-
-        if not isinstance(self.physics_object, list):
-            physics_objects = [self.physics_object]
-
-        name = ",".join(obj.name for obj in physics_objects)
-        return name + "." + inflection.underscore(self.__class__.__name__)
+        return self._name
 
     @property
     def array(self) -> AwkwardArray:
@@ -75,11 +66,11 @@ class Observable(ABC):
         if self.physics_object is None:
             config["physics_object"] = None
         if not isinstance(self.physics_object, list):
-            config["physics_object"] = serialize(self.physics_object)
+            config["physics_object"] = self.physics_object.name
         else:
-            config["physics_object"] = [serialize(obj) for obj in self.physics_object]
+            config["physics_object"] = [obj.name for obj in self.physics_object]
 
-        config["name"] = self._name
+        config["name"] = self.name
         return config
 
     @classmethod
@@ -88,10 +79,10 @@ class Observable(ABC):
 
         if physics_object is None:
             physics_object = None
-        elif isinstance(physics_object, dict):
-            physics_object = deserialize(physics_object)
+        elif isinstance(physics_object, str):
+            physics_object = parse_physics_object(physics_object)
         elif isinstance(physics_object, list):
-            physics_object = [deserialize(obj) for obj in physics_object]
+            physics_object = [parse_physics_object(obj) for obj in physics_object]
 
         name = config.get("name")
 
