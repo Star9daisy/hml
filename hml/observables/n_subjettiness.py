@@ -2,7 +2,7 @@ from typing import Self
 
 from typeguard import typechecked
 
-from hml.physics_objects.physics_object import PhysicsObject
+from hml.physics_objects import PhysicsObject, parse_physics_object
 
 from ..events import Events
 from ..saving import registered_object
@@ -15,18 +15,12 @@ class TauN(Observable):
     def __init__(
         self,
         n: int,
-        physics_object: str | PhysicsObject,
+        physics_object: PhysicsObject,
         name: str | None = None,
     ) -> None:
         super().__init__(physics_object, name)
         self.n = n
-
-    @property
-    def name(self) -> str:
-        if self._name:
-            return self._name
-
-        return f"tau{self.n}"
+        self._name = name if name is not None else f"tau{n}"
 
     def get_array(self, events: Events) -> AwkwardArray:
         self.physics_object.read(events)
@@ -41,8 +35,9 @@ class TauN(Observable):
     @classmethod
     def from_config(cls, config: dict) -> Self:
         n = int(config["n"])
+        physics_object = parse_physics_object(config["physics_object"])
         name = config.get("name")
-        return cls(n=n, physics_object=config["physics_object"], name=name)
+        return cls(n=n, physics_object=physics_object, name=name)
 
 
 @typechecked
@@ -52,19 +47,13 @@ class TauMN(Observable):
         self,
         m: int,
         n: int,
-        physics_object: str | PhysicsObject,
+        physics_object: PhysicsObject,
         name: str | None = None,
     ) -> None:
         super().__init__(physics_object, name)
         self.m = m
         self.n = n
-
-    @property
-    def name(self) -> str:
-        if self._name:
-            return self._name
-
-        return f"tau{self.m}{self.n}"
+        self._name = name if name is not None else f"tau{m}{n}"
 
     def get_array(self, events: Events) -> AwkwardArray:
         self.physics_object.read(events)
@@ -84,5 +73,6 @@ class TauMN(Observable):
     def from_config(cls, config: dict) -> Self:
         m = int(config["m"])
         n = int(config["n"])
+        physics_object = parse_physics_object(config["physics_object"])
         name = config.get("name")
-        return cls(m=m, n=n, physics_object=config["physics_object"], name=name)
+        return cls(m=m, n=n, physics_object=physics_object, name=name)
