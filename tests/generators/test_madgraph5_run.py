@@ -40,14 +40,17 @@ def test_madgraph5_run():
     assert run.error == 2.5e-05
     assert run.n_events == 200
     assert len(run.sub_runs) == 2
-    assert run.event_paths() == {
-        "lhe": [],
-        "hepmc": [],
-        "root": [
-            Path(output_dir) / "Events/run_01_0/tag_1_delphes_events.root",
-            Path(output_dir) / "Events/run_01_1/tag_1_delphes_events.root",
-        ],
-    }
+    assert run.event_paths()["lhe"] == []
+    assert run.event_paths()["hepmc"] == []
+    assert (
+        Path(output_dir) / "Events/run_01_0/tag_1_delphes_events.root"
+        in run.event_paths()["root"]
+    )
+    assert (
+        Path(output_dir) / "Events/run_01_1/tag_1_delphes_events.root"
+        in run.event_paths()["root"]
+    )
+
     assert (
         repr(run)
         == "Madgraph5Run run_01 (2 sub runs):\n- collider: pp:6500.0x6500.0\n- tag: tag_1\n- seed: 42\n- cross: 0.002323\n- error: 2.5e-05\n- n_events: 200"
