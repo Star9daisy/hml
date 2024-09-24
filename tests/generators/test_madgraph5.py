@@ -53,6 +53,8 @@ def test_madgraph5_import_model():
     with pytest.raises(ValueError):
         g.import_model("unknown")
 
+    Path("MG5_debug").unlink()
+
 
 def test_madgraph5_define():
     g = Madgraph5("mg5_aMC")
