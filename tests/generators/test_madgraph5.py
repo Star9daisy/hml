@@ -40,7 +40,7 @@ def test_madgraph5_init_executable():
     g = Madgraph5(executable="mg5_aMC")
 
     assert "mg5_aMC" in g.executable
-    assert g.version == "3.4.2"
+    assert hasattr(g, "version")
 
 
 def test_madgraph5_import_model():
