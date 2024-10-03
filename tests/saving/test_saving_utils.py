@@ -8,4 +8,4 @@ def test_import_custom_objects(custom_objects_in_tests):
     import_custom_objects()
 
     all_registered_names = [obj["registered_name"] for obj in CUSTOM_REGISTERED_OBJECTS]
-    assert "tau(?P<m>\d)(?P<n>\d)" in all_registered_names
+    assert r"tau(?P<m>\d)(?P<n>\d)" in all_registered_names
