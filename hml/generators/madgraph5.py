@@ -406,6 +406,12 @@ class Madgraph5:
         # Clean the pypy file
         self._clean_pypy_file()
 
+        # Save Feynman diagrams
+        original_verbose = self.verbose
+        self.verbose = 0
+        self.display_diagrams(diagrams_dir=self.output_dir / "Diagrams")
+        self.verbose = original_verbose
+
     def launch(
         self,
         shower: Literal["off", "pythia8"] = "off",
