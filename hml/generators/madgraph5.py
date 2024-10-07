@@ -159,6 +159,7 @@ class Madgraph5:
             self.executable = shutil.which(pathlike_to_path(executable))
 
         self.verbose = verbose
+        self.log = []
         self._spawn_process()
 
     def _spawn_process(self):
@@ -181,6 +182,7 @@ class Madgraph5:
         # Loop over the output
         while self.child.expect([r"\n", r"MG5_aMC>$"]) == 0:
             output = self.child.before.rstrip() + self.child.after.rstrip()
+            self.log.append(output)
 
             if match := re.search(r"VERSION ([\d\.]+)", output):
                 self.version = match.group(1)
@@ -218,6 +220,7 @@ class Madgraph5:
 
         # Send commands
         self.child.sendline(f"import model {model}")
+        self.log.append(f"import model {model}")
 
         # Init error handling
         error_message = []
@@ -226,6 +229,7 @@ class Madgraph5:
         # Loop over the output
         while self.child.expect([r"\n", r"MG5_aMC>$"]) == 0:
             output = self.child.before.rstrip() + self.child.after.rstrip()
+            self.log.append(output)
 
             if re.search(r"\x1b\[1;31m", output) or has_error:
                 has_error = True
@@ -255,6 +259,7 @@ class Madgraph5:
         # Loop over the multi-particles to send commands
         for name, particles in multi_particles.items():
             self.child.sendline(f"define {name} = {particles}")
+            self.log.append(f"define {name} = {particles}")
 
             # Init error handling
             error_message = []
@@ -263,6 +268,7 @@ class Madgraph5:
             # Loop over the output
             while self.child.expect([r"\n", r"MG5_aMC>$"]) == 0:
                 output = self.child.before.rstrip() + self.child.after.rstrip()
+                self.log.append(output)
 
                 if re.search(r"\x1b\[1;31m", output) or has_error:
                     has_error = True
@@ -293,8 +299,10 @@ class Madgraph5:
         for i, process in enumerate(processes):
             if i == 0:
                 self.child.sendline(f"generate {process}")
+                self.log.append(f"generate {process}")
             else:
                 self.child.sendline(f"add process {process}")
+                self.log.append(f"add process {process}")
 
             # Init error handling
             error_message = []
@@ -303,6 +311,7 @@ class Madgraph5:
             # Loop over the output
             while self.child.expect([r"\n", r"MG5_aMC>$"]) == 0:
                 output = self.child.before.rstrip() + self.child.after.rstrip()
+                self.log.append(output)
 
                 if re.search(r"\x1b\[1;31m", output) or has_error:
                     has_error = True
@@ -344,10 +353,12 @@ class Madgraph5:
 
         # Send command
         self.child.sendline(f"display diagrams {self.diagrams_dir.as_posix()}")
+        self.log.append(f"display diagrams {self.diagrams_dir.as_posix()}")
 
         # Loop over the output
         while self.child.expect([r"\n", r"MG5_aMC>$"]) == 0:
             output = self.child.before.rstrip() + self.child.after.rstrip()
+            self.log.append(output)
 
             if self.verbose == 2:
                 print(output)
@@ -386,13 +397,16 @@ class Madgraph5:
         # Send command
         if output_dir is None:
             self.child.sendline("output")
+            self.log.append("output")
         else:
             # -f: force cleaning of the directory if it already exists
             self.child.sendline(f"output {output_dir.as_posix()} -f")
+            self.log.append(f"output {output_dir.as_posix()} -f")
 
         # Loop over the output
         while self.child.expect([r"\n", r"MG5_aMC>$"]) == 0:
             output = self.child.before.rstrip() + self.child.after.rstrip()
+            self.log.append(output)
 
             if match := re.search(r"Output to directory (.*) done\.", output):
                 self.output_dir = Path(match.group(1))
@@ -411,6 +425,12 @@ class Madgraph5:
         self.verbose = 0
         self.display_diagrams(diagrams_dir=self.output_dir / "Diagrams")
         self.verbose = original_verbose
+
+        # Save log
+        self.log_dir = self.output_dir / "Logs"
+        self.log_dir.mkdir(parents=True)
+        with (self.log_dir / "Process.log").open("w") as f:
+            f.write("\n".join(self.log))
 
     def launch(
         self,
@@ -509,6 +529,10 @@ class Madgraph5:
         if dry_run:
             return commands
 
+        # Open log file before sending commands to ensure the correct run number
+        pre_run_name = f"run_{len(self.runs)+1}"
+        f = open(self.log_dir / f"{pre_run_name}.log", "w")
+
         # Send commands
         for command in commands:
             self.child.sendline(command)
@@ -516,6 +540,9 @@ class Madgraph5:
         # Loop over the output
         while self.child.expect([r"\n", r">$"]) == 0:
             output = self.child.before.rstrip() + self.child.after.rstrip()
+            self.log.append(output)
+            f.write(output + "\n")
+            f.flush()
 
             if self.verbose == 1:
                 if output.startswith("Generating"):
