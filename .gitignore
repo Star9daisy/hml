@@ -1,7 +1,7 @@
-**/__pycache__
-**/*coverage*
-**/dist
-/tag_1_delphes_events.root
+__pycache__
 
-**/playground
-**/archive
+*coverage*
+
+archive
+dist
+playground
