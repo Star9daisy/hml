@@ -10,6 +10,8 @@ packages = [{include = "hml"}]
 [tool.poetry.dependencies]
 awkward = "^2.7.1"
 numba = "^0.60.0"
+numpy = "<1.26.0"
+particle = "^0.25.2"
 python = "^3.10"
 typeguard = "^4.4.1"
 uproot = "^5.5.0"
