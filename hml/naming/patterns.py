@@ -1,3 +1,0 @@
-INDEX_PATTERN = r"(?P<index>\d*:?\d*)"
-KEY_PATTERN = r"(?P<key>[a-zA-Z_]+)"
-PHYSICS_OBJECT_PATTERN = KEY_PATTERN + INDEX_PATTERN
