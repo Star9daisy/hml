@@ -1,0 +1,41 @@
+name: HML Tests
+
+on:
+  push:
+
+jobs:
+  run_tests:
+    runs-on: ubuntu-latest
+    container: star9daisy/hml-env:2.2.1
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check space
+        run: df -h
+
+      - name: Install Poetry
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+          echo 'export PATH="/github/home/.local/bin:$PATH"' >> /github/home/.bashrc
+
+      - name: Install HML dependencies
+        run: |
+          export PATH="/github/home/.local/bin:$PATH"
+          poetry install
+
+      - name: Run tests
+        run: |
+          export PATH="/github/home/.local/bin:$PATH"
+          . /root/softwares/root6/bin/thisroot.sh
+          export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/root/softwares/madgraph5/Delphes
+          export ROOT_INCLUDE_PATH=/root/softwares/madgraph5/Delphes/external
+          poetry run pip install tensorflow
+
+          poetry run pytest tests hml
+        shell: bash
+
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          token: ${{ secrets.CODECOV_TOKEN}}
