@@ -16,12 +16,14 @@ python = "^3.10"
 typeguard = "^4.4.1"
 uproot = "^5.5.0"
 vector = "^1.5.2"
+fastjet = "^3.4.2.1"
+typing-extensions = "^4.12.2"
 
 
 [tool.poetry.group.dev.dependencies]
+deptry = "^0.21.1"
 pytest = "^8.3.3"
 pytest-cov = "^6.0.0"
-deptry = "^0.21.1"
 
 [build-system]
 requires = ["poetry-core"]

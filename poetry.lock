@@ -96,6 +96,20 @@ files = [
 numpy = ">=1.18.0"
 
 [[package]]
+name = "click"
+version = "8.1.7"
+description = "Composable command line interface toolkit"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "click-8.1.7-py3-none-any.whl", hash = "sha256:ae74fb96c20a0277a1d615f1e4d73c8414f5a98db8b799a7931d1582f3390c28"},
+    {file = "click-8.1.7.tar.gz", hash = "sha256:ca9853ad459e787e2192211578cc907e7594e294c7ccc834310722b41b9ca6de"},
+]
+
+[package.dependencies]
+colorama = {version = "*", markers = "platform_system == \"Windows\""}
+
+[[package]]
 name = "colorama"
 version = "0.4.6"
 description = "Cross-platform colored terminal text."
@@ -286,6 +300,34 @@ files = [
 dev = ["black (==22.3.0)", "hypothesis", "numpy", "pytest (>=5.30)", "pytest-benchmark", "pytest-xdist"]
 
 [[package]]
+name = "deptry"
+version = "0.21.1"
+description = "A command line utility to check for unused, missing and transitive dependencies in a Python project."
+optional = false
+python-versions = ">=3.9"
+files = [
+    {file = "deptry-0.21.1-cp39-abi3-macosx_10_12_x86_64.whl", hash = "sha256:c31e1a66502e28870e1e0a679598462a6119f4bcb656786e63cb545328170a3f"},
+    {file = "deptry-0.21.1-cp39-abi3-macosx_11_0_arm64.whl", hash = "sha256:4b53089c22d18076935a3e9e6325566fa712cd9b89fe602978a8e85f0f4209bf"},
+    {file = "deptry-0.21.1-cp39-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:b5eae7afbcb9b7f6baa855b323e0da016a23f2a98d4b181dcfd2c71766512387"},
+    {file = "deptry-0.21.1-cp39-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:4afef1c5eb0b48ebc31de2437b460df0363cb99722252b7faf7fa6f43e10cbcd"},
+    {file = "deptry-0.21.1-cp39-abi3-win_amd64.whl", hash = "sha256:981a28e1feeaad82f07a6e3c8d7842c5f6eae3807dc13b24d453a20cd0a42a72"},
+    {file = "deptry-0.21.1-cp39-abi3-win_arm64.whl", hash = "sha256:98075550540c6b45f57abdfc453900bd2a179dc495d986ccc0757a813ee55103"},
+    {file = "deptry-0.21.1-pp310-pypy310_pp73-macosx_10_12_x86_64.whl", hash = "sha256:79593d7631cdbbc39d76503e3af80e46d8b4873e915b85c1567a04c81e8a17d5"},
+    {file = "deptry-0.21.1-pp310-pypy310_pp73-macosx_11_0_arm64.whl", hash = "sha256:145a172ea608bb86dd93a9d14f7d45ed8649a36d7f685ea725e0348cbf562f10"},
+    {file = "deptry-0.21.1-pp310-pypy310_pp73-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:e487f520d4fbee513f4767ab98334a29d5d932f78eb413b64e27c977f2bf2756"},
+    {file = "deptry-0.21.1-pp310-pypy310_pp73-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:091288cad2bd6029995d2e700e965cd574079365807f202ee232e4be0a571f43"},
+    {file = "deptry-0.21.1-pp310-pypy310_pp73-win_amd64.whl", hash = "sha256:1adf29a5aa1d33d9e1140b9235b212d9753278604b4389b2186f638692e29876"},
+    {file = "deptry-0.21.1.tar.gz", hash = "sha256:60332b8d58d6584b340511a4e1b694048499f273d69eaea413631b2e8bc186ff"},
+]
+
+[package.dependencies]
+click = ">=8.0.0,<9"
+colorama = {version = ">=0.4.6", markers = "sys_platform == \"win32\""}
+packaging = ">=23.2"
+requirements-parser = ">=0.11.0,<1"
+tomli = {version = ">=2.0.1", markers = "python_version < \"3.11\""}
+
+[[package]]
 name = "exceptiongroup"
 version = "1.2.2"
 description = "Backport of PEP 654 (exception groups)"
@@ -298,6 +340,42 @@ files = [
 
 [package.extras]
 test = ["pytest (>=6)"]
+
+[[package]]
+name = "fastjet"
+version = "3.4.2.1"
+description = "Official FastJet bindings to Python and Awkward Array."
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "fastjet-3.4.2.1-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:38b8c36d0f079e5e9f15ffb29a9851c358babb1e928bfebbccc09a359cf4666f"},
+    {file = "fastjet-3.4.2.1-cp310-cp310-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:60e48dc46d7fe7592841208569f15c441603091de26ab4db9f71958a67bf0aed"},
+    {file = "fastjet-3.4.2.1-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:d8cf0cca4e8fa2bcc169f600157692e0fd820ec7d01c3b7d5b06d988594a9224"},
+    {file = "fastjet-3.4.2.1-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:aca963046468b073059983327ffbd0a1d2208e0987934aca441b6d08c83dcd65"},
+    {file = "fastjet-3.4.2.1-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:815354b62c62245c9b3a7a31c6d7aa3752a41fcc14c85ac95a67c103cc2ff41c"},
+    {file = "fastjet-3.4.2.1-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:bf1714d015b1ed3631316da355d46a11e729d051157ef4ca2abf5a6b547ed021"},
+    {file = "fastjet-3.4.2.1-cp312-cp312-macosx_10_9_x86_64.whl", hash = "sha256:98336c220857adbee2e5b1fdc077e5bb81d985ad221bf3780856ad5cb1ede1f0"},
+    {file = "fastjet-3.4.2.1-cp312-cp312-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:eba70330647be189709d15612e96f4d466684166126bbfe5bfd0e51467509725"},
+    {file = "fastjet-3.4.2.1-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:d65bb390769acc5bc65c938e4c5d0923e5d9ece15bf6d949f8505518da63c8fa"},
+    {file = "fastjet-3.4.2.1-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:04bc7cb3c95fc71569abb3fa555240ec8a6f559909612c12eadbd480f19e7447"},
+    {file = "fastjet-3.4.2.1-cp38-cp38-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:41077204afa77e78b9e6313b742c3e061e10bcf63be62a429da7fe11a7c53f38"},
+    {file = "fastjet-3.4.2.1-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:988049706400c839f15a7e6bdbeac6335fce40846fe5a3a3478d12d6c77df020"},
+    {file = "fastjet-3.4.2.1-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:c31c4a016c7e0abfd0d1af16cf86845ffde62baa16fb4a8e34f4a4a7496a24dd"},
+    {file = "fastjet-3.4.2.1-cp39-cp39-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:2493b4b104b4202a9c40d0c845be07efa219db41be0943f2eaa5fbaba0a5e5f1"},
+    {file = "fastjet-3.4.2.1-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:3a784cc90859e4d9fa2db24fb74ae112ac5af04d1b6646b037f66ba175ef48c5"},
+    {file = "fastjet-3.4.2.1.tar.gz", hash = "sha256:625609582770101886fa4a21d57d9aa69d478a7be4b6bca2b313ff0b4db88359"},
+]
+
+[package.dependencies]
+awkward = ">=2"
+numpy = ">=1.13.3"
+vector = "*"
+
+[package.extras]
+dask = ["dask (>=2023.4.0)", "dask-awkward (>=2023.4.2)"]
+dev = ["pytest (>=4.6)"]
+docs = ["Sphinx (>=3.0.0)", "recommonmark (>=0.5.0)", "sphinx-copybutton", "sphinx-rtd-theme (>=0.5.0)"]
+test = ["dask (>=2023.4.0)", "dask-awkward[test] (>=2023.4.2)", "distributed (>=2023.4.0)", "pytest (>=4.6)", "uproot (>=5)"]
 
 [[package]]
 name = "fsspec"
@@ -574,6 +652,21 @@ pytest = ">=4.6"
 testing = ["fields", "hunter", "process-tests", "pytest-xdist", "virtualenv"]
 
 [[package]]
+name = "requirements-parser"
+version = "0.11.0"
+description = "This is a small Python module for parsing Pip requirement files."
+optional = false
+python-versions = "<4.0,>=3.8"
+files = [
+    {file = "requirements_parser-0.11.0-py3-none-any.whl", hash = "sha256:50379eb50311834386c2568263ae5225d7b9d0867fb55cf4ecc93959de2c2684"},
+    {file = "requirements_parser-0.11.0.tar.gz", hash = "sha256:35f36dc969d14830bf459803da84f314dc3d17c802592e9e970f63d0359e5920"},
+]
+
+[package.dependencies]
+packaging = ">=23.2"
+types-setuptools = ">=69.1.0"
+
+[[package]]
 name = "tomli"
 version = "2.1.0"
 description = "A lil' TOML parser"
@@ -601,6 +694,17 @@ typing-extensions = ">=4.10.0"
 [package.extras]
 doc = ["Sphinx (>=7)", "packaging", "sphinx-autodoc-typehints (>=1.2.0)", "sphinx-rtd-theme (>=1.3.0)"]
 test = ["coverage[toml] (>=7)", "mypy (>=1.2.0)", "pytest (>=7)"]
+
+[[package]]
+name = "types-setuptools"
+version = "75.5.0.20241122"
+description = "Typing stubs for setuptools"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "types_setuptools-75.5.0.20241122-py3-none-any.whl", hash = "sha256:d69c445f7bdd5e49d1b2441aadcee1388febcc9ad9d9d5fd33648b555e0b1c31"},
+    {file = "types_setuptools-75.5.0.20241122.tar.gz", hash = "sha256:196aaf1811cbc1c77ac1d4c4879d5308b6fdf426e56b73baadbca2a1827dadef"},
+]
 
 [[package]]
 name = "typing-extensions"
@@ -819,4 +923,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "61c8ea25847162543f53ec6dbf6e7367f440584d46a29f883d17163aac20aaec"
+content-hash = "3a8ecc1b98234d929230a2417507145545a079325f74f8660903c35222f88e79"
