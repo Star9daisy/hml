@@ -21,6 +21,7 @@ vector = "^1.5.2"
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.3"
 pytest-cov = "^6.0.0"
+deptry = "^0.21.1"
 
 [build-system]
 requires = ["poetry-core"]
