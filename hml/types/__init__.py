@@ -1,3 +1,5 @@
+from typing import Literal
+
 from typing_extensions import Self
 
 from .externals import AwkwardArray, AwkwardArrayBuilder, MomentumArray, UprootTree
@@ -8,3 +10,5 @@ from .utils import (
     pxpypze_to_ptetaphimass,
     str_to_index,
 )
+
+JET_ALGORITHM = Literal["kt", "ca", "ak"]
