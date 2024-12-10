@@ -1,0 +1,26 @@
+{
+    "languages": {
+        "Python": {
+            "language_servers": ["pyright", "ruff", "!pylsp"],
+            "format_on_save": "on",
+            "formatter": [
+                {
+                    "code_actions": {
+                        "source.organizeImports.ruff": true
+                    }
+                },
+                {
+                    "language_server": {
+                        "name": "ruff"
+                    }
+                }
+            ]
+        }
+    },
+    "file_scan_exclusions": [
+        "__pycache__",
+        ".git",
+        ".pytest_cache",
+        ".ropeproject"
+    ]
+}
