@@ -1,3 +1,4 @@
+from enum import IntEnum
 from pathlib import Path
 from typing import Protocol
 
