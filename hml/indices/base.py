@@ -1,4 +1,6 @@
-from ..types import Self, typechecked
+from typeguard import typechecked
+
+from ..types import Self
 
 
 @typechecked
@@ -10,11 +12,12 @@ class Index:
     def value(self) -> int | slice:
         raise NotImplementedError
 
-    def to_str(self) -> str:
+    @property
+    def name(self) -> str:
         raise NotImplementedError
 
     @classmethod
-    def from_str(cls, string: str) -> Self:
+    def from_name(cls, name: str) -> Self:
         raise NotImplementedError
 
     @property

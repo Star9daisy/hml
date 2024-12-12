@@ -1,4 +1,6 @@
-from ..types import Self, typechecked
+from typeguard import typechecked
+
+from ..types import Self
 from .base import Index
 
 
@@ -13,32 +15,34 @@ class RangeIndex(Index):
     def value(self) -> slice:
         return self._value
 
-    def to_str(self) -> str:
+    @property
+    def name(self) -> str:
         if self.start is None and self.stop is None:
             return ""
 
-        elif self.start is None and self.stop is not None:
-            return f":{self.stop}"
-
         elif self.start is not None and self.stop is None:
             return f"{self.start}:"
+
+        elif self.start is None and self.stop is not None:
+            return f":{self.stop}"
 
         else:
             return f"{self.start}:{self.stop}"
 
     @classmethod
-    def from_str(cls, string: str) -> Self:
-        if string == "":
+    def from_name(cls, name: str) -> Self:
+        if name == "":
             return cls()
 
-        if ":" not in string:
-            raise ValueError(f"Invalid string: {string}")
+        if ":" not in name:
+            raise ValueError(f"Invalid name: {name}")
 
-        parts = string.split(":")
+        parts = name.split(":")
         if len(parts) != 2:
-            raise ValueError(f"Invalid string: {string}")
+            raise ValueError(f"Invalid name: {name}")
+
         if any(not part.isdigit() for part in parts):
-            raise ValueError(f"Invalid string: {string}")
+            raise ValueError(f"Invalid name: {name}")
 
         return cls(start=int(parts[0]), stop=int(parts[1]))
 

@@ -1,4 +1,6 @@
-from ..types import Self, typechecked
+from typeguard import typechecked
+
+from ..types import Self
 from .base import Index
 
 
@@ -11,15 +13,16 @@ class IntegerIndex(Index):
     def value(self) -> int:
         return self._value
 
-    def to_str(self) -> str:
+    @property
+    def name(self) -> str:
         return str(self.value)
 
     @classmethod
-    def from_str(cls, string: str) -> Self:
-        if not string.isdigit():
-            raise ValueError(f"Invalid string: {string}")
+    def from_name(cls, name: str) -> Self:
+        if not name.isdigit():
+            raise ValueError(f"Invalid name: {name}")
 
-        return cls(value=int(string))
+        return cls(value=int(name))
 
     @property
     def config(self) -> dict:
