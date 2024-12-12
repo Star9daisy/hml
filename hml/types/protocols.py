@@ -13,7 +13,7 @@ class Serializable(Protocol):
 
 
 @runtime_checkable
-class Registerable(Protocol):
+class Registrable(Protocol):
     @property
     def config(self) -> dict: ...
 
