@@ -48,4 +48,4 @@ def index_like_to_index(index: IndexLike) -> Index:
         return RangeIndex(start=index.start, stop=index.stop)
 
     else:
-        raise TypeError(f"Invalid index: {index}")
+        return index
