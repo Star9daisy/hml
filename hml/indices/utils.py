@@ -34,3 +34,18 @@ def get(name: str) -> Index:
 
     else:
         raise ValueError(f"Invalid name: {name}")
+
+
+IndexLike = int | slice | Index
+
+
+@typechecked
+def index_like_to_index(index: IndexLike) -> Index:
+    if isinstance(index, int):
+        return IntegerIndex(value=index)
+
+    elif isinstance(index, slice):
+        return RangeIndex(start=index.start, stop=index.stop)
+
+    else:
+        raise TypeError(f"Invalid index: {index}")
