@@ -1,6 +1,10 @@
 from importlib import import_module
 
-from .base import Index, typechecked
+from typeguard import typechecked
+
+from .base import Index
+from .integer import IntegerIndex
+from .range import RangeIndex
 
 
 @typechecked
@@ -18,3 +22,15 @@ def deserialize(dict_: dict) -> Index:
     class_ = getattr(module, dict_["class_name"])
 
     return class_.from_config(dict_["config"])
+
+
+@typechecked
+def get(name: str) -> Index:
+    if name.isdigit():
+        return IntegerIndex.from_name(name)
+
+    elif name == "" or ":" in name:
+        return RangeIndex.from_name(name)
+
+    else:
+        raise ValueError(f"Invalid name: {name}")
