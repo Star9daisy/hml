@@ -1,66 +1,152 @@
 import awkward as ak
+from inflection import underscore
 from particle import Particle
 from typeguard import typechecked
 
-from ..operations.fastjet import get_inclusive_jets
-from ..operations.uproot import get_branch
-from ..types import (
-    JET_ALGORITHM,
-    Self,
-    UprootTree,
-    momentum_to_array,
-    pxpypze_to_ptetaphimass,
+from ..indices import (
+    Index,
+    IndexLike,
+    IntegerIndex,
+    RangeIndex,
+    index_like_to_index,
 )
-from .base import SinglePhysicsObject
+from ..indices import deserialize as deserialize_index
+from ..operations import awkward as oak
+from ..operations import fastjet as ofj
+from ..operations import uproot as our
+from ..types import (
+    AwkwardArray,
+    ROOTEvents,
+    Self,
+    momentum_to_array,
+    pxpypze_to_ptetaphim,
+)
+from .base import PhysicsObject
+
+
+@typechecked
+class SinglePhysicsObject(PhysicsObject):
+    def __init__(self, index: IndexLike | None = None) -> None:
+        self._branch = self.__class__.__name__
+        self._index = index
+        self._array = oak.empty_array()
+
+    @property
+    def branch(self) -> str:
+        return self._branch
+
+    @property
+    def index(self) -> Index:
+        if self._index is None:
+            return RangeIndex()
+        else:
+            return index_like_to_index(self._index)
+
+    @property
+    def array(self) -> AwkwardArray:
+        return self._array
+
+    def get_array(self, events: ROOTEvents) -> AwkwardArray:
+        raise NotImplementedError
+
+    def read(self, events: ROOTEvents) -> Self:
+        array = self.get_array(events)
+
+        if isinstance(self.index, IntegerIndex):
+            padded = oak.pad_none(array, self.index.value + 1, axis=1)
+        elif isinstance(self.index, RangeIndex):
+            if self.index.stop is not None:
+                padded = oak.pad_none(array, self.index.stop, axis=1)
+            else:
+                padded = array
+        else:
+            raise ValueError(f"Invalid index: {self.index}")
+
+        indexed = oak.take(padded, self.index)
+
+        try:
+            regular = ak.to_regular(indexed, axis=None)
+        except Exception:
+            regular = indexed
+
+        self._array = regular
+
+        return self
+
+    @property
+    def shape(self) -> tuple[int, ...]:
+        return oak.get_shape(self.array)
+
+    @property
+    def dtype(self) -> dict[str, str]:
+        return oak.get_record_dtype(self.array)
+
+    @property
+    def name(self) -> str:
+        return underscore(self.branch) + self.index.name
+
+    @classmethod
+    def from_name(cls, name: str) -> Self:
+        branch_name = underscore(cls.__name__)
+        if branch_name not in name:
+            raise ValueError(f"Invalid name: {name}")
+
+        return cls(index=Index.from_name(name.replace(branch_name, "")))
+
+    @property
+    def config(self) -> dict:
+        return {"index": self.index.config}
+
+    @classmethod
+    def from_config(cls, config: dict) -> Self:
+        return cls(index=(deserialize_index(config["index"])))
 
 
 @typechecked
 class Electron(SinglePhysicsObject):
     MASS = Particle.from_name("e-").mass
 
-    def __init__(self, branch: str = "Electron", class_name: str = "electron") -> None:
-        super().__init__(branch=branch, class_name=class_name)
-
-    def read(self, events: UprootTree) -> Self:
-        self.array = ak.zip(
+    def get_array(self, events: ROOTEvents) -> AwkwardArray:
+        return ak.zip(
             {
                 "pt": events[f"{self.branch}.PT"].array(),
                 "eta": events[f"{self.branch}.Eta"].array(),
                 "phi": events[f"{self.branch}.Phi"].array(),
-                "mass": ak.full_like(events[f"{self.branch}.PT"].array(), self.MASS),
-                "charge": events[f"{self.branch}.Charge"].array(),
+                "m": ak.full_like(events[f"{self.branch}.PT"].array(), self.MASS),
+                "q": events[f"{self.branch}.Charge"].array(),
             }
         )
-
-        return self
 
 
 @typechecked
 class Jet(SinglePhysicsObject):
     def __init__(
         self,
-        algorithm: JET_ALGORITHM | None = None,
+        algorithm: str | None = None,
         radius: float | None = None,
-        branch: str = "Jet",
-        class_name: str = "jet",
+        index: IndexLike | None = None,
     ) -> None:
-        super().__init__(branch=branch, class_name=class_name)
+        super().__init__(index=index)
         self.algorithm = algorithm
         self.radius = radius
 
-    def read(self, events: UprootTree) -> Self:
-        if not self.algorithm or not self.radius:
+    def get_array(self, events: ROOTEvents) -> AwkwardArray:
+        if self.algorithm is None or self.radius is None:
+            constituents_branch = f"{self.branch}.Constituents"
+            constituents = our.get_branch(events, constituents_branch)
+            self.constituents = ak.values_astype(constituents, "float32")
+
             n_subjettiness = events[f"{self.branch}.Tau[5]"].array()
 
-            self.array = ak.zip(
+            return ak.zip(
                 {
                     "pt": events[f"{self.branch}.PT"].array(),
                     "eta": events[f"{self.branch}.Eta"].array(),
                     "phi": events[f"{self.branch}.Phi"].array(),
-                    "mass": events[f"{self.branch}.Mass"].array(),
+                    "m": events[f"{self.branch}.Mass"].array(),
                     "b_tag": events[f"{self.branch}.BTag"].array(),
                     "tau_tag": events[f"{self.branch}.TauTag"].array(),
-                    "charge": events[f"{self.branch}.Charge"].array(),
+                    "q": events[f"{self.branch}.Charge"].array(),
                     "tau1": n_subjettiness[..., 0],
                     "tau2": n_subjettiness[..., 1],
                     "tau3": n_subjettiness[..., 2],
@@ -68,49 +154,44 @@ class Jet(SinglePhysicsObject):
                     "tau5": n_subjettiness[..., 4],
                 }
             )
+        else:
+            constituents_branch = f"{self.branch}.Constituents"
+            constituents = our.get_branch(events, constituents_branch, as_momentum=True)
+            flattened_constituents = ak.flatten(constituents, axis=-1)
 
-            branch = f"{self.branch}.Constituents"
-            constituents = get_branch(events, branch)
+            jets, constituents = ofj.get_inclusive_jets(
+                flattened_constituents,
+                radius=self.radius,
+                algorithm=self.algorithm,
+            )
+            jets = momentum_to_array(pxpypze_to_ptetaphim(jets))
+            constituents = momentum_to_array(pxpypze_to_ptetaphim(constituents))
             self.constituents = ak.values_astype(constituents, "float32")
 
-            return self
-
-        branch = f"{self.branch}.Constituents"
-        constituents = get_branch(events, branch, as_momentum=True)
-        flattened_constituents = ak.flatten(constituents, axis=-1)
-
-        jets, constituents = get_inclusive_jets(
-            flattened_constituents,
-            radius=self.radius,
-            algorithm=self.algorithm,
-            return_constituents=True,
-        )
-        jets = momentum_to_array(pxpypze_to_ptetaphimass(jets))
-        constituents = momentum_to_array(pxpypze_to_ptetaphimass(constituents))
-
-        self.array = ak.values_astype(jets, "float32")
-        self.constituents = ak.values_astype(constituents, "float32")
-
-        return self
+            return ak.values_astype(jets, "float32")
 
     @property
     def name(self) -> str:
-        if self.algorithm and self.radius:
-            prefix = f"{self.algorithm}{self.radius*10:.0f}"
+        if self.algorithm is None or self.radius is None:
+            return super().name
         else:
-            prefix = ""
-
-        return prefix + super().name
+            return f"{self.algorithm}{self.radius*10:.0f}" + super().name
 
     @classmethod
     def from_name(cls, name: str) -> Self:
-        if name == "jet":
+        branch_name = underscore(cls.__name__)
+
+        if branch_name not in name:
+            raise ValueError(f"Invalid name: {name}")
+
+        elif branch_name == name:
             return cls()
 
-        algorithm = name[:2]
-        radius = float(name[2:-3]) / 10
-
-        return cls(algorithm=algorithm, radius=radius)
+        else:
+            prefix = name.replace(branch_name, "")
+            algorithm = prefix[:2]
+            radius = float(prefix[2:]) / 10
+            return cls(algorithm=algorithm, radius=radius)
 
     @property
     def config(self) -> dict:
@@ -125,126 +206,78 @@ class Jet(SinglePhysicsObject):
         return cls(
             algorithm=config["algorithm"],
             radius=config["radius"],
-            branch=config["branch"],
-            class_name=config["class_name"],
+            index=deserialize_index(config["index"]),
         )
 
 
 @typechecked
 class FatJet(Jet):
-    def __init__(
-        self,
-        algorithm: JET_ALGORITHM | None = None,
-        radius: float | None = None,
-        branch: str = "FatJet",
-        class_name: str = "fatjet",
-    ) -> None:
-        super().__init__(
-            algorithm=algorithm,
-            radius=radius,
-            branch=branch,
-            class_name=class_name,
-        )
-
-    @classmethod
-    def from_name(cls, name: str) -> Self:
-        if name == "fatjet":
-            return cls()
-
-        algorithm = name[:2]
-        radius = float(name[2:-6]) / 10
-
-        return cls(algorithm=algorithm, radius=radius)
+    pass
 
 
 @typechecked
 class MissingET(SinglePhysicsObject):
-    def __init__(self, branch: str = "MissingET", class_name: str = "met") -> None:
-        super().__init__(branch=branch, class_name=class_name)
-
-    def read(self, events: UprootTree) -> Self:
-        self.array = ak.zip(
+    def get_array(self, events: ROOTEvents) -> AwkwardArray:
+        return ak.zip(
             {
                 "pt": events[f"{self.branch}.MET"].array(),
                 "eta": events[f"{self.branch}.Eta"].array(),
                 "phi": events[f"{self.branch}.Phi"].array(),
-                "mass": ak.zeros_like(events[f"{self.branch}.MET"].array()),
+                "m": ak.zeros_like(events[f"{self.branch}.MET"].array()),
             }
         )
-
-        return self
 
 
 @typechecked
 class Muon(SinglePhysicsObject):
     MASS = Particle.from_name("mu-").mass
 
-    def __init__(self, branch: str = "Muon", class_name: str = "muon") -> None:
-        super().__init__(branch=branch, class_name=class_name)
-
-    def read(self, events: UprootTree) -> Self:
-        self.array = ak.zip(
+    def get_array(self, events: ROOTEvents) -> AwkwardArray:
+        return ak.zip(
             {
                 "pt": events[f"{self.branch}.PT"].array(),
                 "eta": events[f"{self.branch}.Eta"].array(),
                 "phi": events[f"{self.branch}.Phi"].array(),
-                "mass": ak.full_like(events[f"{self.branch}.PT"].array(), self.MASS),
-                "charge": events[f"{self.branch}.Charge"].array(),
+                "m": ak.full_like(events[f"{self.branch}.PT"].array(), self.MASS),
+                "q": events[f"{self.branch}.Charge"].array(),
             }
         )
-
-        return self
 
 
 @typechecked
 class Photon(SinglePhysicsObject):
-    def __init__(self, branch: str = "Photon", class_name: str = "photon") -> None:
-        super().__init__(branch=branch, class_name=class_name)
-
-    def read(self, events: UprootTree) -> Self:
-        self.array = ak.zip(
+    def get_array(self, events: ROOTEvents) -> AwkwardArray:
+        return ak.zip(
             {
                 "pt": events[f"{self.branch}.PT"].array(),
                 "eta": events[f"{self.branch}.Eta"].array(),
                 "phi": events[f"{self.branch}.Phi"].array(),
-                "mass": ak.zeros_like(events[f"{self.branch}.PT"].array()),
+                "m": ak.zeros_like(events[f"{self.branch}.PT"].array()),
             }
         )
-
-        return self
 
 
 @typechecked
 class Tower(SinglePhysicsObject):
-    def __init__(self, branch: str = "Tower", class_name: str = "tower") -> None:
-        super().__init__(branch=branch, class_name=class_name)
-
-    def read(self, events: UprootTree) -> Self:
-        self.array = ak.zip(
+    def get_array(self, events: ROOTEvents) -> AwkwardArray:
+        return ak.zip(
             {
                 "pt": events[f"{self.branch}.ET"].array(),
                 "eta": events[f"{self.branch}.Eta"].array(),
                 "phi": events[f"{self.branch}.Phi"].array(),
-                "mass": ak.zeros_like(events[f"{self.branch}.ET"].array()),
+                "m": ak.zeros_like(events[f"{self.branch}.ET"].array()),
             }
         )
-
-        return self
 
 
 @typechecked
 class Track(SinglePhysicsObject):
-    def __init__(self, branch: str = "Track", class_name: str = "track") -> None:
-        super().__init__(branch=branch, class_name=class_name)
-
-    def read(self, events: UprootTree) -> Self:
-        self.array = ak.zip(
+    def get_array(self, events: ROOTEvents) -> AwkwardArray:
+        return ak.zip(
             {
                 "pt": events[f"{self.branch}.PT"].array(),
                 "eta": events[f"{self.branch}.Eta"].array(),
                 "phi": events[f"{self.branch}.Phi"].array(),
-                "mass": events[f"{self.branch}.Mass"].array(),
+                "m": events[f"{self.branch}.Mass"].array(),
             }
         )
-
-        return self
