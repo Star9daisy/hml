@@ -1,28 +1,26 @@
 import awkward as ak
 import fastjet as fj
 
-from ..types import AwkwardArray, MomentumArray
+from ..types import AwkwardArray
 
 
-def get_jet_algorithm(name: str) -> int:
-    if name == "kt":
-        return fj.kt_algorithm
-    elif name == "ca":
-        return fj.cambridge_algorithm
-    elif name == "ak":
-        return fj.antikt_algorithm
+def get_algorithm(name: str) -> int:
+    supported_algorithms = {
+        "kt": fj.kt_algorithm,
+        "ca": fj.cambridge_aachen_algorithm,
+        "ak": fj.antikt_algorithm,
+    }
+
+    if name not in supported_algorithms:
+        raise ValueError(f"Invalid name: {name}")
     else:
-        raise ValueError(f"{name} is not supported yet")
+        return supported_algorithms[name]
 
 
 def get_inclusive_jets(
-    particles: AwkwardArray,
-    algorithm: str,
-    radius: float,
-    return_constituents: bool = False,
-) -> MomentumArray | tuple[MomentumArray, MomentumArray]:
-
-    definition = fj.JetDefinition(get_jet_algorithm(algorithm), radius)
+    particles: AwkwardArray, algorithm: str, radius: float
+) -> tuple[AwkwardArray, AwkwardArray]:
+    definition = fj.JetDefinition(get_algorithm(algorithm), radius)
     cluster = fj.ClusterSequence(particles, definition)
 
     jets = cluster.inclusive_jets()
@@ -32,7 +30,4 @@ def get_inclusive_jets(
     jets = jets[sort_indices]
     constituents = constituents[sort_indices]
 
-    if not return_constituents:
-        return jets
-
-    return jets, constituents
+    return jets, constituents  # type: ignore

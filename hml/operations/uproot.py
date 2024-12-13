@@ -1,13 +1,14 @@
 import awkward as ak
 import numba as nb
+import vector
 
-from ..types import AwkwardArray, AwkwardArrayBuilder, UprootTree
+from ..types import AwkwardArray, AwkwardArrayBuilder, ROOTEvents
+
+vector.register_awkward()
 
 
 def get_branch(
-    events: UprootTree,
-    branch: str,
-    as_momentum: bool = False,
+    events: ROOTEvents, branch: str, as_momentum: bool = False
 ) -> AwkwardArray:
     if events[branch].top_level:
         return get_top_branch(events, branch, as_momentum)
@@ -16,9 +17,7 @@ def get_branch(
 
 
 def get_top_branch(
-    events: UprootTree,
-    branch: str,
-    as_momentum: bool = False,
+    events: ROOTEvents, branch: str, as_momentum: bool = False
 ) -> AwkwardArray:
     if not events[branch].top_level:
         raise ValueError(f"{branch} is not a top-level branch")
@@ -39,6 +38,7 @@ def get_top_branch(
     # Phi
     phi = events[f"{branch}.Phi"].array()
 
+    # Mass
     if f"{branch}.Mass" in events:
         mass = events[f"{branch}.Mass"].array()
     else:
@@ -51,9 +51,7 @@ def get_top_branch(
 
 
 def get_sub_branch(
-    events: UprootTree,
-    branch: str,
-    as_momentum: bool = False,
+    events: ROOTEvents, branch: str, as_momentum: bool = False
 ) -> AwkwardArray:
     if events[branch].top_level:
         raise ValueError(f"{branch} is not a sub-branch")
