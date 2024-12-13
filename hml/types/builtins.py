@@ -1,5 +1,4 @@
-from enum import IntEnum
 from pathlib import Path
-from typing import Protocol
+from typing import Protocol, Sequence
 
 from typing_extensions import Self
