@@ -3,14 +3,9 @@ from inflection import underscore
 from particle import Particle
 from typeguard import typechecked
 
-from ..indices import (
-    Index,
-    IndexLike,
-    IntegerIndex,
-    RangeIndex,
-    index_like_to_index,
-)
+from ..indices import Index, IndexLike, IntegerIndex, RangeIndex, index_like_to_index
 from ..indices import deserialize as deserialize_index
+from ..indices import serialize as serialize_index
 from ..operations import awkward as oak
 from ..operations import fastjet as ofj
 from ..operations import uproot as our
@@ -95,7 +90,7 @@ class SinglePhysicsObject(PhysicsObject):
 
     @property
     def config(self) -> dict:
-        return {"index": self.index.config}
+        return {"index": serialize_index(self.index)}
 
     @classmethod
     def from_config(cls, config: dict) -> Self:

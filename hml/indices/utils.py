@@ -18,18 +18,10 @@ def serialize(index: Index) -> dict:
 
 @typechecked
 def deserialize(dict_: dict) -> Index:
-    if "module" in dict_ and "class_name" in dict_:
-        module = import_module(dict_["module"])
-        class_ = getattr(module, dict_["class_name"])
-        return class_.from_config(dict_["config"])
+    module = import_module(dict_["module"])
+    class_ = getattr(module, dict_["class_name"])
 
-    else:
-        if "value" in dict_:
-            return IntegerIndex.from_config(dict_)
-        elif "start" in dict_ and "stop" in dict_:
-            return RangeIndex.from_config(dict_)
-        else:
-            raise ValueError(f"Invalid dict: {dict_}")
+    return class_.from_config(dict_["config"])
 
 
 @typechecked
