@@ -1,3 +1,4 @@
+import re
 from importlib import import_module
 
 from typeguard import typechecked
@@ -30,7 +31,7 @@ def deserialize(dict_: dict) -> Index:
 @typechecked
 def retrieve(name: str) -> Index:
     for cls in BUILTIN_INDICES:
-        if cls.PATTERN.fullmatch(name):
+        if re.fullmatch(cls.PATTERN, name):
             return cls.from_name(name)
 
     raise ValueError(f"Invalid name: {name}")

@@ -8,7 +8,7 @@ from .base import Index
 
 @typechecked
 class RangeIndex(Index):
-    PATTERN: re.Pattern = re.compile(r"(?:(?P<start>\d+)?:(?P<stop>\d+)?)?")
+    PATTERN: str = r"(?:(?P<start>\d+)?:(?P<stop>\d+)?)?"
 
     def __init__(self, start: int | None = None, stop: int | None = None) -> None:
         self.start = start
@@ -35,7 +35,7 @@ class RangeIndex(Index):
 
     @classmethod
     def from_name(cls, name: str) -> Self:
-        if not (match := cls.PATTERN.fullmatch(name)):
+        if not (match := re.fullmatch(cls.PATTERN, name)):
             raise ValueError(f"Invalid name: {name}")
 
         start = match.groupdict()["start"]

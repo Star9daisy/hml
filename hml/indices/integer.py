@@ -8,7 +8,7 @@ from .base import Index
 
 @typechecked
 class IntegerIndex(Index):
-    PATTERN: re.Pattern[str] = re.compile(r"(?P<value>\d+)")
+    PATTERN: str = r"(?P<value>\d+)"
 
     def __init__(self, value: int = 0) -> None:
         self._value = value
@@ -23,7 +23,7 @@ class IntegerIndex(Index):
 
     @classmethod
     def from_name(cls, name: str) -> Self:
-        if not (match := cls.PATTERN.fullmatch(name)):
+        if not (match := re.fullmatch(cls.PATTERN, name)):
             raise ValueError(f"Invalid name: {name}")
 
         value = int(match.groupdict()["value"])
