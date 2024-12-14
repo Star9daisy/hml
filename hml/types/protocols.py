@@ -1,3 +1,4 @@
+import re
 from typing import runtime_checkable
 
 from .builtins import Protocol, Self
@@ -14,6 +15,8 @@ class Serializable(Protocol):
 
 @runtime_checkable
 class Registrable(Protocol):
+    PATTERN: re.Pattern[str]
+
     @property
     def config(self) -> dict: ...
 
