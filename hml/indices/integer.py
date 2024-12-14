@@ -26,7 +26,8 @@ class IntegerIndex(Index):
         if not (match := re.fullmatch(cls.PATTERN, name)):
             raise ValueError(f"Invalid name: {name}")
 
-        value = int(match.groupdict()["value"])
+        group = match.groupdict()
+        value = int(group["value"])
 
         return cls(value=value)
 

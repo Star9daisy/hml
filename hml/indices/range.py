@@ -38,8 +38,8 @@ class RangeIndex(Index):
         if not (match := re.fullmatch(cls.PATTERN, name)):
             raise ValueError(f"Invalid name: {name}")
 
-        start = match.groupdict()["start"]
-        stop = match.groupdict()["stop"]
+        group = match.groupdict()
+        start, stop = group["start"], group["stop"]
         start = int(start) if start is not None else start
         stop = int(stop) if stop is not None else stop
 
