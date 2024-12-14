@@ -5,7 +5,7 @@ from ..types import Self
 
 @typechecked
 class Index:
-    PATTERN: str = r"(?P<index>\d*:?\d*)"
+    PATTERN: str = r"\d*:?\d*"
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(value={self.value})"

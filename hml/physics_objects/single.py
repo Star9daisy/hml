@@ -24,7 +24,7 @@ from .base import PhysicsObject
 
 @typechecked
 class SinglePhysicsObject(PhysicsObject):
-    PATTERN: str = r"(?P<physics_object>\w+)" + Index.PATTERN
+    PATTERN: str = rf"[a-zA-Z]+\w*[a-zA-Z]+{Index.PATTERN}"
 
     def __init__(self, index: IndexLike | None = None) -> None:
         self._branch = self.__class__.__name__
@@ -111,7 +111,7 @@ class SinglePhysicsObject(PhysicsObject):
 
 @typechecked
 class Electron(SinglePhysicsObject):
-    PATTERN: str = "electron" + Index.PATTERN
+    PATTERN: str = rf"electron(?P<index>{Index.PATTERN})"
     MASS: float = Particle.from_name("e-").mass  # type: ignore
 
     def get_array(self, events: ROOTEvents) -> AwkwardArray:
@@ -128,7 +128,7 @@ class Electron(SinglePhysicsObject):
 
 @typechecked
 class Jet(SinglePhysicsObject):
-    PATTERN: str = r"(?P<algorithm>\w+)(?P<radius>\d+)jet" + Index.PATTERN
+    PATTERN: str = rf"(?P<algorithm>\w+?)(?P<radius>\d+)jet(?P<index>{Index.PATTERN})"
 
     def __init__(
         self,
@@ -222,14 +222,12 @@ class Jet(SinglePhysicsObject):
 
 @typechecked
 class FatJet(Jet):
-    PATTERN: str = (
-        r"(?P<algorithm>\w+)(?P<radius>\d+)(?P<branch>fatjet)" + Index.PATTERN
-    )
+    PATTERN: str = rf"(?P<algorithm>\w+?)(?P<radius>\d+)(?P<branch>fatjet)(?P<index>{Index.PATTERN})"
 
 
 @typechecked
 class MissingET(SinglePhysicsObject):
-    PATTERN: str = r"(?P<branch>missing_et|met)" + Index.PATTERN
+    PATTERN: str = rf"(?P<branch>missing_et|met)(?P<index>{Index.PATTERN})"
 
     def get_array(self, events: ROOTEvents) -> AwkwardArray:
         return ak.zip(
@@ -244,7 +242,7 @@ class MissingET(SinglePhysicsObject):
 
 @typechecked
 class Muon(SinglePhysicsObject):
-    PATTERN: str = "muon" + Index.PATTERN
+    PATTERN: str = rf"muon(?P<index>{Index.PATTERN})"
     MASS: float = Particle.from_name("mu-").mass  # type: ignore
 
     def get_array(self, events: ROOTEvents) -> AwkwardArray:
@@ -261,7 +259,7 @@ class Muon(SinglePhysicsObject):
 
 @typechecked
 class Photon(SinglePhysicsObject):
-    PATTERN: str = "photon" + Index.PATTERN
+    PATTERN: str = rf"photon(?P<index>{Index.PATTERN})"
 
     def get_array(self, events: ROOTEvents) -> AwkwardArray:
         return ak.zip(
@@ -276,7 +274,7 @@ class Photon(SinglePhysicsObject):
 
 @typechecked
 class Tower(SinglePhysicsObject):
-    PATTERN: str = "tower" + Index.PATTERN
+    PATTERN: str = rf"tower(?P<index>{Index.PATTERN})"
 
     def get_array(self, events: ROOTEvents) -> AwkwardArray:
         return ak.zip(
@@ -291,7 +289,7 @@ class Tower(SinglePhysicsObject):
 
 @typechecked
 class Track(SinglePhysicsObject):
-    PATTERN: str = "track" + Index.PATTERN
+    PATTERN: str = rf"track(?P<index>{Index.PATTERN})"
 
     def get_array(self, events: ROOTEvents) -> AwkwardArray:
         return ak.zip(
