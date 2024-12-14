@@ -2,9 +2,12 @@ from importlib import import_module
 
 from typeguard import typechecked
 
+from ..types import Type
 from .base import Index
 from .integer import IntegerIndex
 from .range import RangeIndex
+
+BUILTIN_INDICES: list[Type[Index]] = [IntegerIndex, RangeIndex]
 
 
 @typechecked
@@ -25,15 +28,12 @@ def deserialize(dict_: dict) -> Index:
 
 
 @typechecked
-def get(name: str) -> Index:
-    if name.isdigit():
-        return IntegerIndex.from_name(name)
+def retrieve(name: str) -> Index:
+    for cls in BUILTIN_INDICES:
+        if cls.PATTERN.fullmatch(name):
+            return cls.from_name(name)
 
-    elif name == "" or ":" in name:
-        return RangeIndex.from_name(name)
-
-    else:
-        raise ValueError(f"Invalid name: {name}")
+    raise ValueError(f"Invalid name: {name}")
 
 
 IndexLike = int | slice | Index

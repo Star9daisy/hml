@@ -1,3 +1,5 @@
+import re
+
 from typeguard import typechecked
 
 from ..types import Self
@@ -6,6 +8,8 @@ from .base import Index
 
 @typechecked
 class IntegerIndex(Index):
+    PATTERN: re.Pattern[str] = re.compile(r"(?P<value>\d+)")
+
     def __init__(self, value: int = 0) -> None:
         self._value = value
 
@@ -19,10 +23,12 @@ class IntegerIndex(Index):
 
     @classmethod
     def from_name(cls, name: str) -> Self:
-        if not name.isdigit():
+        if not (match := cls.PATTERN.fullmatch(name)):
             raise ValueError(f"Invalid name: {name}")
 
-        return cls(value=int(name))
+        value = int(match.groupdict()["value"])
+
+        return cls(value=value)
 
     @property
     def config(self) -> dict:

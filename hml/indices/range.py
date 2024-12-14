@@ -1,3 +1,5 @@
+import re
+
 from typeguard import typechecked
 
 from ..types import Self
@@ -6,6 +8,8 @@ from .base import Index
 
 @typechecked
 class RangeIndex(Index):
+    PATTERN: re.Pattern = re.compile(r"(?:(?P<start>\d+)?:(?P<stop>\d+)?)?")
+
     def __init__(self, start: int | None = None, stop: int | None = None) -> None:
         self.start = start
         self.stop = stop
@@ -31,20 +35,15 @@ class RangeIndex(Index):
 
     @classmethod
     def from_name(cls, name: str) -> Self:
-        if name == "":
-            return cls()
-
-        if ":" not in name:
+        if not (match := cls.PATTERN.fullmatch(name)):
             raise ValueError(f"Invalid name: {name}")
 
-        parts = name.split(":")
-        if len(parts) != 2:
-            raise ValueError(f"Invalid name: {name}")
+        start = match.groupdict()["start"]
+        stop = match.groupdict()["stop"]
+        start = int(start) if start is not None else start
+        stop = int(stop) if stop is not None else stop
 
-        if any(not part.isdigit() for part in parts):
-            raise ValueError(f"Invalid name: {name}")
-
-        return cls(start=int(parts[0]), stop=int(parts[1]))
+        return cls(start=start, stop=stop)
 
     @property
     def config(self) -> dict:
