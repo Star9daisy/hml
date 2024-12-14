@@ -224,6 +224,15 @@ class Jet(SinglePhysicsObject):
 class FatJet(Jet):
     PATTERN: str = rf"(?P<algorithm>\w+?)(?P<radius>\d+)(?P<branch>fatjet)(?P<index>{Index.PATTERN})"
 
+    def __init__(
+        self,
+        algorithm: str | None = None,
+        radius: float | None = None,
+        index: IndexLike | None = None,
+    ) -> None:
+        super().__init__(algorithm, radius, index)
+        self.branch_name = "fatjet"
+
 
 @typechecked
 class MissingET(SinglePhysicsObject):
