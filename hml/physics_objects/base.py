@@ -3,6 +3,8 @@ from ..types import AwkwardArray, ROOTEvents, Self
 
 
 class PhysicsObject:
+    PATTERN: str
+
     def __repr__(self) -> str:
         return f"{self.name}: {self.array.typestr}"
 

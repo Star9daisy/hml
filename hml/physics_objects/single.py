@@ -1,3 +1,5 @@
+import re
+
 import awkward as ak
 from inflection import underscore
 from particle import Particle
@@ -5,6 +7,7 @@ from typeguard import typechecked
 
 from ..indices import Index, IndexLike, IntegerIndex, RangeIndex, index_like_to_index
 from ..indices import deserialize as deserialize_index
+from ..indices import retrieve as retrieve_index
 from ..indices import serialize as serialize_index
 from ..operations import awkward as oak
 from ..operations import fastjet as ofj
@@ -21,8 +24,11 @@ from .base import PhysicsObject
 
 @typechecked
 class SinglePhysicsObject(PhysicsObject):
+    PATTERN: str = r"(?P<physics_object>\w+)" + Index.PATTERN
+
     def __init__(self, index: IndexLike | None = None) -> None:
         self._branch = self.__class__.__name__
+        self.branch_name = underscore(self._branch)
         self._index = index
         self._array = oak.empty_array()
 
@@ -78,15 +84,21 @@ class SinglePhysicsObject(PhysicsObject):
 
     @property
     def name(self) -> str:
-        return underscore(self.branch) + self.index.name
+        return self.branch_name + self.index.name
 
     @classmethod
     def from_name(cls, name: str) -> Self:
-        branch_name = underscore(cls.__name__)
-        if branch_name not in name:
+        if not (match := re.fullmatch(cls.PATTERN, name)):
             raise ValueError(f"Invalid name: {name}")
 
-        return cls(index=Index.from_name(name.replace(branch_name, "")))
+        group = match.groupdict()
+        branch = group.get("branch")
+        index = retrieve_index(group["index"])
+
+        obj = cls(index=index)
+        obj.branch_name = branch or underscore(cls.__name__)
+
+        return obj
 
     @property
     def config(self) -> dict:
@@ -99,7 +111,8 @@ class SinglePhysicsObject(PhysicsObject):
 
 @typechecked
 class Electron(SinglePhysicsObject):
-    MASS = Particle.from_name("e-").mass
+    PATTERN: str = "electron" + Index.PATTERN
+    MASS: float = Particle.from_name("e-").mass  # type: ignore
 
     def get_array(self, events: ROOTEvents) -> AwkwardArray:
         return ak.zip(
@@ -115,6 +128,8 @@ class Electron(SinglePhysicsObject):
 
 @typechecked
 class Jet(SinglePhysicsObject):
+    PATTERN: str = r"(?P<algorithm>\w+)(?P<radius>\d+)jet" + Index.PATTERN
+
     def __init__(
         self,
         algorithm: str | None = None,
@@ -174,19 +189,19 @@ class Jet(SinglePhysicsObject):
 
     @classmethod
     def from_name(cls, name: str) -> Self:
-        branch_name = underscore(cls.__name__)
-
-        if branch_name not in name:
+        if not (match := re.fullmatch(cls.PATTERN, name)):
             raise ValueError(f"Invalid name: {name}")
 
-        elif branch_name == name:
-            return cls()
+        group = match.groupdict()
+        algorithm = group["algorithm"]
+        radius = float(group["radius"]) / 10
+        branch = group.get("branch")
+        index = retrieve_index(group["index"])
 
-        else:
-            prefix = name.replace(branch_name, "")
-            algorithm = prefix[:2]
-            radius = float(prefix[2:]) / 10
-            return cls(algorithm=algorithm, radius=radius)
+        obj = cls(algorithm=algorithm, radius=radius, index=index)
+        obj.branch_name = branch or underscore(cls.__name__)
+
+        return obj
 
     @property
     def config(self) -> dict:
@@ -207,11 +222,15 @@ class Jet(SinglePhysicsObject):
 
 @typechecked
 class FatJet(Jet):
-    pass
+    PATTERN: str = (
+        r"(?P<algorithm>\w+)(?P<radius>\d+)(?P<branch>fatjet)" + Index.PATTERN
+    )
 
 
 @typechecked
 class MissingET(SinglePhysicsObject):
+    PATTERN: str = r"(?P<branch>missing_et|met)" + Index.PATTERN
+
     def get_array(self, events: ROOTEvents) -> AwkwardArray:
         return ak.zip(
             {
@@ -225,7 +244,8 @@ class MissingET(SinglePhysicsObject):
 
 @typechecked
 class Muon(SinglePhysicsObject):
-    MASS = Particle.from_name("mu-").mass
+    PATTERN: str = "muon" + Index.PATTERN
+    MASS: float = Particle.from_name("mu-").mass  # type: ignore
 
     def get_array(self, events: ROOTEvents) -> AwkwardArray:
         return ak.zip(
@@ -241,6 +261,8 @@ class Muon(SinglePhysicsObject):
 
 @typechecked
 class Photon(SinglePhysicsObject):
+    PATTERN: str = "photon" + Index.PATTERN
+
     def get_array(self, events: ROOTEvents) -> AwkwardArray:
         return ak.zip(
             {
@@ -254,6 +276,8 @@ class Photon(SinglePhysicsObject):
 
 @typechecked
 class Tower(SinglePhysicsObject):
+    PATTERN: str = "tower" + Index.PATTERN
+
     def get_array(self, events: ROOTEvents) -> AwkwardArray:
         return ak.zip(
             {
@@ -267,6 +291,8 @@ class Tower(SinglePhysicsObject):
 
 @typechecked
 class Track(SinglePhysicsObject):
+    PATTERN: str = "track" + Index.PATTERN
+
     def get_array(self, events: ROOTEvents) -> AwkwardArray:
         return ak.zip(
             {
